@@ -4,8 +4,10 @@
 
 #include "ofMain.h"
 #include "ofxNetwork.h"
+#include "ofxOpenCv.h"
 #include "Vector.h"
 #include "Poco/RegularExpression.h"
+
 using Poco::RegularExpression;
 
 enum BlockType  {	GRASS = 2, COBBLE = 4, LAVA = 10,
@@ -47,6 +49,16 @@ class testApp : public ofBaseApp{
 		//Block blocks [30][30][30] ;
 		vector<vector<vector<Block> > > array3D;
 	
+	
+	bool bDraw;
+		ofVideoGrabber grabber;
+		ofxCvColorImage convert;
+		ofxCvGrayscaleImage gray;
+		
+		ofVideoPlayer jackson;
+		
+		ofTrueTypeFont OF;
+		ofTrueTypeFont AR;
 };
 
 

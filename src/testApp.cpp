@@ -1,9 +1,61 @@
 #include "testApp.h"
+#include "ARToolKitPlus/TrackerSingleMarkerImpl.h"
+
+ARToolKitPlus::TrackerSingleMarker *tracker;
+static const int       width = 640, height = 480, bpp = 1;
+static   size_t        numPixels = width*height*bpp;
+static    size_t        numBytesRead;
+static   const char    *fName = "data/markerboard_480-499.raw";
+static   const char    *tagName = "data/patt.hiro";
+
+static    unsigned char *cameraBuffer = new unsigned char[numPixels];
+static bool useBCH = true;
 
 //--------------------------------------------------------------
 void testApp::setup(){
+	//tracker = new ARToolKitPlus::TrackerSingleMarkerImpl<16,16,64, ARToolKitPlus::PIXEL_FORMAT_RGB565>(640,480);
+	grabber.initGrabber(640, 480);
+	convert.allocate(640, 480);
+	gray.allocate(640, 480);
+	bDraw = false;
 	
+	tracker = new ARToolKitPlus::TrackerSingleMarkerImpl<6,6,6, 1, 8>(width,height);
 	
+	const char* description = tracker->getDescription();
+	printf("ARToolKitPlus compile-time information:\n%s\n\n", description);
+	
+    // set a logger so we can output error messages
+    
+	tracker->setPixelFormat(ARToolKitPlus::PIXEL_FORMAT_LUM);	
+	
+    if( !tracker->init( (const char *)ofToDataPath("LogitechPro4000.dat").c_str(), 1.0f, 1000.0f) )            // load std. ARToolKit camera file
+	{
+		printf("ERROR: init() failed\n");
+		delete cameraBuffer;
+		delete tracker;
+		return;
+	}
+	
+    // define size of the marker
+    tracker->setPatternWidth(80);
+	
+	// the marker in the BCH test image has a thin border...
+    tracker->setBorderWidth(useBCH ? 0.125f : 0.250f);
+	
+    // set a threshold. alternatively we could also activate automatic thresholding
+    tracker->setThreshold(150);
+	
+    // let's use lookup-table undistortion for high-speed
+    // note: LUT only works with images up to 1024x1024
+    tracker->setUndistortionMode(ARToolKitPlus::UNDIST_LUT);
+	
+    // RPP is more robust than ARToolKit's standard pose estimator
+    tracker->setPoseEstimator(ARToolKitPlus::POSE_ESTIMATOR_RPP);
+	
+    // switch to simple ID based markers
+    // use the tool in tools/IdPatGen to generate markers
+    tracker->setMarkerMode(useBCH ? ARToolKitPlus::MARKER_ID_BCH : ARToolKitPlus::MARKER_ID_SIMPLE);
+   
 	
 	udpConnectionRx.Create();
 	udpConnectionRx.Bind(19802); //incomming data on my port # ...
@@ -43,6 +95,30 @@ void testApp::setup(){
  */
 
 void testApp::update(){
+	grabber.grabFrame();
+	if(grabber.isFrameNew()){
+		
+		//convert our camera frame to grayscale
+		convert.setFromPixels(grabber.getPixels(), 640, 480);
+		gray = convert;
+		
+		//find the marker and get back the confidence
+		int markerId = tracker->calc(gray.getPixels());
+		float conf = (float)tracker->getConfidence();
+		
+		if( conf > 0.0 ){
+			bDraw = true;
+		}else bDraw = false;
+		
+		printf("\n\nFound marker %d  (confidence %d%%)\n\nPose-Matrix:\n  ", markerId, (int(conf*100.0f)));
+		
+		//prints out the matrix - useful for debugging?
+		for(int i=0; i<16; i++)
+			printf("%.2f  %s", tracker->getModelViewMatrix()[i], (i%4==3)?"\n  " : "");
+		
+	}
+	
+	
 	char udpMessage[100000];
 	udpConnectionRx.Receive(udpMessage,100000);
 	string s;
@@ -100,10 +176,26 @@ void testApp::drawBlock(int x, int y, int z, int wx, int wy, int wz){
 
 //--------------------------------------------------------------
 void testApp::draw(){
-	ofTranslate( ofGetWidth() / 2, ofGetHeight() / 2, 0);
+	ofClear(0,0,0);
+	ofSetColor(255,255,255);
+	grabber.draw(0, 0);
+
 	
-	ofRotateX(rotX);
-	ofRotateY(rotY);
+	if(!bDraw){
+		ofTranslate( ofGetWidth() / 2, ofGetHeight() / 2, -100);
+	
+		ofRotateX(rotX);
+		ofRotateY(rotY);
+	} else {
+		glViewport(0, 0, 640, 480 );
+		glMatrixMode( GL_PROJECTION );
+		glLoadMatrixf(tracker->getProjectionMatrix());
+		glMatrixMode( GL_MODELVIEW );
+		glLoadMatrixf(tracker->getModelViewMatrix());
+		
+		//ofSetColor(0xFFFFFF);
+		
+	}		
 	for(int x=0; x < 20; x++){
 		for(int y=0; y < 20; y++){
 			for(int z=0; z < 20; z++){
@@ -153,8 +245,8 @@ void testApp::mouseMoved(int x, int y ){
 
 //--------------------------------------------------------------
 void testApp::mouseDragged(int x, int y, int button){
-	rotXAmt = ofMap(y - clickY, 0, 500, 0, 0.2f);
-	rotYAmt = ofMap(x - clickX, 0, 500, 0, 0.2f);
+	rotXAmt = ofMap(y - clickY, 0, 500, 0, 0.4f);
+	rotYAmt = ofMap(x - clickX, 0, 500, 0, 0.4f);
 	
 }
 

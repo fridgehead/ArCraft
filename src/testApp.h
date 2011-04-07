@@ -7,6 +7,10 @@
 #include "ofxOpenCv.h"
 #include "Vector.h"
 #include "Poco/RegularExpression.h"
+#include "ofxFBOTexture.h"
+#include "ofxGui.h"
+
+
 
 using Poco::RegularExpression;
 
@@ -38,7 +42,7 @@ class testApp : public ofBaseApp{
 		void mouseReleased(int x, int y, int button);
 		void windowResized(int w, int h);
 	
-		void drawBlock(int x, int y, int z, int wx, int wy, int wz);
+		void drawBlock(int x, int y, int z, int wx, int wy, int wz, int type);
 		void trim(string& str);
 		void processShit(const string& str);
 		float clickX, clickY, rotXAmt, rotYAmt, rotX, rotY;
@@ -49,8 +53,8 @@ class testApp : public ofBaseApp{
 		//Block blocks [30][30][30] ;
 		vector<vector<vector<Block> > > array3D;
 	
-	
-	bool bDraw;
+		
+		bool bDraw;
 		ofVideoGrabber grabber;
 		ofxCvColorImage convert;
 		ofxCvGrayscaleImage gray;
@@ -59,6 +63,12 @@ class testApp : public ofBaseApp{
 		
 		ofTrueTypeFont OF;
 		ofTrueTypeFont AR;
+	
+	ofImage grassTexture;
+	
+		ofxFBOTexture fbo;
+		int mx, my;
+	
 };
 
 

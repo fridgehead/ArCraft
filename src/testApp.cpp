@@ -55,7 +55,7 @@ void testApp::setup(){
     // switch to simple ID based markers
     // use the tool in tools/IdPatGen to generate markers
     tracker->setMarkerMode(useBCH ? ARToolKitPlus::MARKER_ID_BCH : ARToolKitPlus::MARKER_ID_SIMPLE);
-   
+	
 	
 	udpConnectionRx.Create();
 	udpConnectionRx.Bind(19802); //incomming data on my port # ...
@@ -84,6 +84,8 @@ void testApp::setup(){
 	rotXAmt = 0;
 	rotYAmt = 0;
 	
+	//fbo.allocate(640,480, GL_RGBA, 1);
+	grassTexture.loadImage("grass.png");
 	
 }
 
@@ -110,11 +112,11 @@ void testApp::update(){
 			bDraw = true;
 		}else bDraw = false;
 		
-		printf("\n\nFound marker %d  (confidence %d%%)\n\nPose-Matrix:\n  ", markerId, (int(conf*100.0f)));
+//		printf("\n\nFound marker %d  (confidence %d%%)\n\nPose-Matrix:\n  ", markerId, (int(conf*100.0f)));
 		
 		//prints out the matrix - useful for debugging?
-		for(int i=0; i<16; i++)
-			printf("%.2f  %s", tracker->getModelViewMatrix()[i], (i%4==3)?"\n  " : "");
+//		for(int i=0; i<16; i++)
+//			printf("%.2f  %s", tracker->getModelViewMatrix()[i], (i%4==3)?"\n  " : "");
 		
 	}
 	
@@ -140,136 +142,166 @@ void testApp::update(){
 	
 }
 
-void testApp::drawBlock(int x, int y, int z, int wx, int wy, int wz){
-	glBegin(GL_QUADS);
+void testApp::drawBlock(int x, int y, int z, int wx, int wy, int wz, int type){
+	//fbo.begin();
+	glPushMatrix();
+	glTranslatef(x,y,z);
+	glScalef(wx,wy,wz);
+	glBegin(GL_POLYGON);
+	glColor3f(1,1,1);
+	switch (type ){
+		case GRASS:
+			
+			glColor3f(0,0.8,0);
+			
+			break;
+		case COBBLE:
+			glColor3f(0.5,0.5,0.5);
+			break;
+		case LAVA:
+			glColor3f(1,0,0);
+			break;
+		case LAVA2:
+			glColor3f(1,0,0);
+			break;
+		case STONE:
+			glColor3f(0.8,0.8,0.8);
+			break;
+		case DIRT:
+			glColor3f(0.8, 0.7, 0.1);
+			break;
+	}
 	
-	glVertex3f( x - wx,  y, z) ;
-	glVertex3f( x,  y,  z);
-	glVertex3f( x, y - wy,  z);
-	glVertex3f( x - wx, y - wy, z);
+	/*      This is the top face*/
+	glVertex3f(0.0f, 0.0f, 0.0f);
+	glVertex3f(0.0f, 0.0f, -1.0f);
+	glVertex3f(-1.0f, 0.0f, -1.0f);
+	glVertex3f(-1.0f, 0.0f, 0.0f);
 	
-	glVertex3f( x,  y,  z);
-	glVertex3f( x,  y, z - wz);
-	glVertex3f( x, y - wy, z - wz);
-	glVertex3f( x, y - wy,  z);
+	/*      This is the front face*/
+	glVertex3f(0.0f, 0.0f, 0.0f);
+	glVertex3f(-1.0f, 0.0f, 0.0f);
+	glVertex3f(-1.0f, -1.0f, 0.0f);
+	glVertex3f(0.0f, -1.0f, 0.0f);
 	
-	glVertex3f( x,  y, z - wz);
-	glVertex3f(x - wx,  y, z - wz);
-	glVertex3f(x - wx, y - wy, z - wz);
-	glVertex3f( x, y - wy, z - wz);
+	/*      This is the right face*/
+	glVertex3f(0.0f, 0.0f, 0.0f);
+	glVertex3f(0.0f, -1.0f, 0.0f);
+	glVertex3f(0.0f, -1.0f, -1.0f);
+	glVertex3f(0.0f, 0.0f, -1.0f);
 	
-	glVertex3f(x - wx,  y, z - wz);
-	glVertex3f(x - wx,  y,  z);
-	glVertex3f(x - wx, y - wy,  z);
-	glVertex3f(x - wx, y - wy, z - wz);
+	/*      This is the left face*/
+	glVertex3f(-1.0f, 0.0f, 0.0f);
+	glVertex3f(-1.0f, 0.0f, -1.0f);
+	glVertex3f(-1.0f, -1.0f, -1.0f);
+	glVertex3f(-1.0f, -1.0f, 0.0f);
 	
-	glVertex3f(x - wx,  y, z - wz);
-	glVertex3f( x,  y, z - wz);
-	glVertex3f( x,  y,  z);
-	glVertex3f(x - wx,  y,  z );
+	/*      This is the bottom face*/
+	glVertex3f(0.0f, 0.0f, 0.0f);
+	glVertex3f(0.0f, -1.0f, -1.0f);
+	glVertex3f(-1.0f, -1.0f, -1.0f);
+	glVertex3f(-1.0f, -1.0f, 0.0f);
 	
-	glVertex3f(x - wx, y - wy, z - wz);
-	glVertex3f( x, y - wy, z - wz);
-	glVertex3f( x, y - wy,  z);
-	glVertex3f(x - wx, y - wy,  z);
+	/*      This is the back face*/
+	glVertex3f(0.0f, 0.0f, 0.0f);
+	glVertex3f(-1.0f, 0.0f, -1.0f);
+	glVertex3f(-1.0f, -1.0f, -1.0f);
+	glVertex3f(0.0f, -1.0f, -1.0f);
+	
 	glEnd();
+	glPopMatrix();
+	//fbo.end();
+	
 }
 
 
 //--------------------------------------------------------------
 void testApp::draw(){
-	ofClear(0,0,0);
+	glDisable (GL_DEPTH_TEST);
+
+	glClearColor(0.0, 0.0, 0.0, 0.0);
+	glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	
 	ofSetColor(255,255,255);
 	grabber.draw(0, 0);
 
 	
-	if(!bDraw){
-		ofTranslate( ofGetWidth() / 2, ofGetHeight() / 2, -100);
 	
-		ofRotateX(rotX);
-		ofRotateY(rotY);
-	} else {
+	if(bDraw){
+		glEnable (GL_DEPTH_TEST);
+
+		//fbo.begin();
+		//fbo.clear();
+		
+		//glEnable(GL_LIGHTING);
+
 		glViewport(0, 0, 640, 480 );
 		glMatrixMode( GL_PROJECTION );
 		glLoadMatrixf(tracker->getProjectionMatrix());
 		glMatrixMode( GL_MODELVIEW );
 		glLoadMatrixf(tracker->getModelViewMatrix());
 		
-		//ofSetColor(0xFFFFFF);
+		glTranslatef(-100,100,0);
 		glRotatef(90, 1, 0, 0);
+		
 		//x
-		ofSetColor(255,0,0);
 		glBegin(GL_LINES);
+		glColor3f(1, 0, 0);
 		glVertex3f(0,0,0);
 		glVertex3f(300,0,0);
 		glEnd();
 		
 		//y
-		ofSetColor(0,255,0);
 		glBegin(GL_LINES);
+		glColor3f(0, 1, 0);
 		glVertex3f(0,0,0);
 		glVertex3f(0,300,0);
 		glEnd();
 		
 		//z
-		ofSetColor(0,0,255);
 		glBegin(GL_LINES);
+		glColor3f(0, 0, 1);
 		glVertex3f(0,0,0);
 		glVertex3f(0,0,300);
 		glEnd();
-		
-		//glTranslatef(100, 100, 0);
-		
-	}		
-	for(int x=0; x < 20; x++){
-		for(int y=0; y < 20; y++){
-			for(int z=0; z < 20; z++){
-				Block b = array3D[x][y][z];
-				if(b.type != NONE){
-					switch (b.type ){
-						case GRASS:
-							
-							ofSetColor(0,200,0);
-							break;
-						case COBBLE:
-							ofSetColor(128,128,128);
-							break;
-						case LAVA:
-							ofSetColor(255,0,0);
-							break;
-						case LAVA2:
-							ofSetColor(255,0,0);
-							break;
-						case STONE:
-							ofSetColor(200,200,200);
-							break;
-					}				
-					drawBlock(x * 10,y * 10,z * 10, 10, 10,10);
+		//fbo.end();
+				
+		for(int x=0; x < 20; x++){
+			for(int y=0; y < 20; y++){
+				for(int z=0; z < 20; z++){
+					Block b = array3D[x][y][z];
+					if(b.type != NONE){
+										
+						drawBlock(x * 10,y * 10,z * 10, 10, 10,10, b.type);
+					}
 				}
 			}
 		}
+		//fbo.end();
 	}
+	//fbo.draw(0, 0, 0);
 	
 	
 	
 	
-
+	
 }
 
 
 //--------------------------------------------------------------
 void testApp::keyPressed(int key){
-
+	
 }
 
 //--------------------------------------------------------------
 void testApp::keyReleased(int key){
-
+	
 }
 
 //--------------------------------------------------------------
 void testApp::mouseMoved(int x, int y ){
-
+	mx = x;
+	my = y;
 }
 
 //--------------------------------------------------------------
@@ -283,6 +315,8 @@ void testApp::mouseDragged(int x, int y, int button){
 void testApp::mousePressed(int x, int y, int button){
 	clickX = x;
 	clickY = y;
+	cout << mx << " " << my << endl;
+	
 }
 
 //--------------------------------------------------------------
@@ -293,7 +327,7 @@ void testApp::mouseReleased(int x, int y, int button){
 
 //--------------------------------------------------------------
 void testApp::windowResized(int w, int h){
-
+	
 }
 
 void testApp::trim(string& str)
@@ -328,12 +362,12 @@ void testApp::processShit(const string& s){
 			
 			first = s.substr(results[1].offset, results[1].length);
 			second = s.substr(results[2].offset, results[2].length);	
-
+			
 			
 			
 			if(first == "y"){
 				currentY = atoi(second.c_str());
-
+				
 			} else if (first == "z"){
 				currentZ = atoi(second.c_str());
 				//clear that row
@@ -350,10 +384,10 @@ void testApp::processShit(const string& s){
 			
 			
 			num = re.match(s,results[0].offset + results[0].length , results);
-
+			
 		}
 		
-
+		
 		
 		
 	} else if(s.substr(0, 4) == "del:"){			//<([-]?[0-9]*):([-]?[0-9]*):([-]?[0-9]*)>
@@ -365,7 +399,7 @@ void testApp::processShit(const string& s){
 		
 		
 	}
-
+	
 }
 
 

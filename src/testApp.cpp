@@ -136,6 +136,8 @@ void testApp::update(){
 	rotY += rotYAmt;
 	
 	
+	
+	
 }
 
 void testApp::drawBlock(int x, int y, int z, int wx, int wy, int wz){
@@ -194,6 +196,29 @@ void testApp::draw(){
 		glLoadMatrixf(tracker->getModelViewMatrix());
 		
 		//ofSetColor(0xFFFFFF);
+		glRotatef(90, 1, 0, 0);
+		//x
+		ofSetColor(255,0,0);
+		glBegin(GL_LINES);
+		glVertex3f(0,0,0);
+		glVertex3f(300,0,0);
+		glEnd();
+		
+		//y
+		ofSetColor(0,255,0);
+		glBegin(GL_LINES);
+		glVertex3f(0,0,0);
+		glVertex3f(0,300,0);
+		glEnd();
+		
+		//z
+		ofSetColor(0,0,255);
+		glBegin(GL_LINES);
+		glVertex3f(0,0,0);
+		glVertex3f(0,0,300);
+		glEnd();
+		
+		//glTranslatef(100, 100, 0);
 		
 	}		
 	for(int x=0; x < 20; x++){
@@ -224,6 +249,10 @@ void testApp::draw(){
 			}
 		}
 	}
+	
+	
+	
+	
 
 }
 

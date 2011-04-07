@@ -216,7 +216,7 @@
 						<key>_historyCapacity</key>
 						<integer>0</integer>
 						<key>bookmark</key>
-						<string>34E88AA9134E495A00DA4D30</string>
+						<string>34E88AFF134E50A500DA4D30</string>
 						<key>history</key>
 						<array>
 							<string>34E88A46134E436B00DA4D30</string>
@@ -235,7 +235,7 @@
 				<key>PBXModuleWindowStatusBarHidden2</key>
 				<false/>
 				<key>RubberWindowFrame</key>
-				<string>139 95 1216 714 0 0 1440 878 </string>
+				<string>125 125 1216 714 0 0 1440 878 </string>
 			</dict>
 		</dict>
 		<dict>
@@ -256,7 +256,7 @@
 						<key>_historyCapacity</key>
 						<integer>0</integer>
 						<key>bookmark</key>
-						<string>34E88AAA134E495A00DA4D30</string>
+						<string>34E88B00134E50A500DA4D30</string>
 						<key>history</key>
 						<array>
 							<string>34E88A4A134E436B00DA4D30</string>
@@ -296,7 +296,7 @@
 						<key>_historyCapacity</key>
 						<integer>0</integer>
 						<key>bookmark</key>
-						<string>34E88AAB134E495A00DA4D30</string>
+						<string>34E88B01134E50A500DA4D30</string>
 						<key>history</key>
 						<array>
 							<string>34E88A04134E3F6E00DA4D30</string>
@@ -441,7 +441,7 @@
 								<key>PBXProjectModuleGUID</key>
 								<string>1CE0B20306471E060097A5F4</string>
 								<key>PBXProjectModuleLabel</key>
-								<string>arLabelingImpl.hxx</string>
+								<string>testApp.cpp</string>
 								<key>PBXSplitModuleInNavigatorKey</key>
 								<dict>
 									<key>Split0</key>
@@ -449,18 +449,18 @@
 										<key>PBXProjectModuleGUID</key>
 										<string>1CE0B20406471E060097A5F4</string>
 										<key>PBXProjectModuleLabel</key>
-										<string>arLabelingImpl.hxx</string>
+										<string>testApp.cpp</string>
 										<key>_historyCapacity</key>
 										<integer>0</integer>
 										<key>bookmark</key>
-										<string>34E88AA8134E495A00DA4D30</string>
+										<string>34E88AFE134E50A500DA4D30</string>
 										<key>history</key>
 										<array>
 											<string>340CBF2F134B5718005E9267</string>
 											<string>34E88A17134E403600DA4D30</string>
-											<string>34E88A2D134E40B100DA4D30</string>
 											<string>34E88A73134E45F100DA4D30</string>
-											<string>34E88A74134E45F100DA4D30</string>
+											<string>34E88AB9134E4AF100DA4D30</string>
+											<string>34E88ABA134E4AF100DA4D30</string>
 										</array>
 									</dict>
 									<key>SplitCount</key>
@@ -690,7 +690,7 @@
 								<key>PBXProjectModuleGUID</key>
 								<string>1CD0528F0623707200166675</string>
 								<key>PBXProjectModuleLabel</key>
-								<string>testApp.h</string>
+								<string>testApp.cpp</string>
 								<key>StatusBarVisibility</key>
 								<true/>
 							</dict>

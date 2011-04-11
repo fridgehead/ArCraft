@@ -8,7 +8,7 @@
 #include "Vector.h"
 #include "Poco/RegularExpression.h"
 #include "ofxFBOTexture.h"
-#include "ofxGui.h"
+#include "ofxGuiApp.h"
 
 
 
@@ -17,17 +17,19 @@ using Poco::RegularExpression;
 enum BlockType  {	GRASS = 2, COBBLE = 4, LAVA = 10,
 	LAVA2 = 11, STONE = 1, DIRT = 3,
 	LOGS = 5, WATER = 8, LEAVES = 18,
-	SNOW = 78, NONE = 0 };
+	SNOW = 78, NONE = 0, TREE = 17 };
 
 struct Block {
 	BlockType type;
+	int textureRef;
+	bool textured;
 	
 };
 
 
 
 
-class testApp : public ofBaseApp{
+class testApp : public ofxGuiApp {
 
 	public:
 		void setup();
@@ -42,15 +44,21 @@ class testApp : public ofBaseApp{
 		void mouseReleased(int x, int y, int button);
 		void windowResized(int w, int h);
 	
-		void drawBlock(int x, int y, int z, int wx, int wy, int wz, int type);
+		void drawBlock(int x, int y, int z, int wx, int wy, int wz, Block *bType);
 		void trim(string& str);
 		void processShit(const string& str);
+		void handleGui(int parameterId, int task, void* data, int length);
+		bool testVisibility(int x, int y, int z);
+	
 		float clickX, clickY, rotXAmt, rotYAmt, rotX, rotY;
 	
 		ofxUDPManager udpConnectionRx;
 	
 		string rxMessage;
 		//Block blocks [30][30][30] ;
+		int mapWidth, mapHeight, mapDepth;
+		bool mapLocked;
+	
 		vector<vector<vector<Block> > > array3D;
 	
 		
@@ -61,13 +69,21 @@ class testApp : public ofBaseApp{
 		
 		ofVideoPlayer jackson;
 		
-		ofTrueTypeFont OF;
-		ofTrueTypeFont AR;
+		
 	
-	ofImage grassTexture;
+	ofImage grassImage;
+	ofImage textures[9];
+	ofTexture grassTexture;
 	
 		ofxFBOTexture fbo;
 		int mx, my;
+	
+	
+	float mapScale;
+	bool guiDraw;	
+	ofxPoint2f offset;
+	
+	RegularExpression * sliceRE;
 	
 };
 

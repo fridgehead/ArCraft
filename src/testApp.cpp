@@ -61,31 +61,77 @@ void testApp::setup(){
 	udpConnectionRx.Bind(19802); //incomming data on my port # ...
 	udpConnectionRx.SetNonBlocking(true);
 	
+	
+	//load textures
+	ofDisableArbTex();
+	ofSetTextureWrap();
+	textures[0].loadImage("grass.png");
+	textures[1].loadImage("cobble.png");	
+	textures[2].loadImage("dirt.png");	
+	textures[3].loadImage("lava.png");	
+	textures[4].loadImage("rock.png");	
+	textures[5].loadImage("sand.png");	
+	textures[6].loadImage("snow.png");	
+	textures[7].loadImage("tree.png");
+	textures[8].loadImage("leaves.png");
+	
+	
+	mapWidth = 40;
+	mapHeight = 20;
+	mapDepth = 40;
+	mapLocked = false;
+	
 	//fill our 3d vector with 20x20x20
-	array3D.resize(20);
-	for (int i = 0; i < 20; ++i) {
-		array3D[i].resize(20);
+	mapLocked = true;
+	array3D.resize(mapWidth);
+	for (int i = 0; i < mapWidth; ++i) {
+		array3D[i].resize(mapHeight);
 		
-		for (int j = 0; j < 20; ++j)
-			array3D[i][j].resize(20);
+		for (int j = 0; j < mapHeight; ++j)
+			array3D[i][j].resize(mapDepth);
 	}
 	Block b;
 	
-	for(int x=0; x < 20; x++){
-		for(int y=0; y < 20; y++){
-			for(int z=0; z < 20; z++){
+	for(int x=0; x < mapWidth; x++){
+		for(int y=0; y < mapHeight; y++){
+			for(int z=0; z < mapDepth; z++){
 				b.type = NONE;
+				b.textured = false;
+				
 				array3D[x][y][z] = b;
 			}
 		}
 	}
 	b.type = GRASS;
+	b.textured = true;
+	b.textureRef = 0;
 	array3D[5][5][5] = b;
 	rotXAmt = 0;
 	rotYAmt = 0;
 	
-	//fbo.allocate(640,480, GL_RGBA, 1);
-	grassTexture.loadImage("grass.png");
+	fbo.allocate(640,480, GL_RGBA, 1);
+	
+	
+		
+	mapScale = 1.0f;
+	//do a gui
+	ofxGuiPanel	*panel = gui->addPanel(0, "Panel", 215, 20, 12, OFXGUI_PANEL_SPACING);
+	panel->addSlider(0, "scaleSlider", 125, 15, 0, 10, 10, kofxGui_Display_Int, 1);
+	panel->addXYPad(1, "XYPad", 100 , 100, ofxPoint2f(0,0), ofxPoint2f(200,200),ofxPoint2f(0, 0), kofxGui_Display_Float2, 1);
+	
+	guiDraw = true;
+	gui->activate(true);
+	offset.x = 0.0f;
+	offset.y = 0.0f;
+	
+	
+	//regular expressions
+	sliceRE = new RegularExpression("<([a-z0-9]*):([0-9]*)>");
+	
+	
+		
+						 
+	
 	
 }
 
@@ -95,6 +141,25 @@ void testApp::setup(){
 /* slice:<y:0><z:0><0:1><0:1>
  *
  */
+
+void testApp::handleGui(int parameterId, int task, void* data, int length){
+	switch(parameterId){
+		case 0:
+			if(length == sizeof(float)){
+				mapScale = *(float*)data;
+			}	
+			break;
+		case 1:
+			
+			if (task == kofxGui_Set_Point){
+				offset.x = (*(ofxPoint2f*)data).x;
+				offset.y = (*(ofxPoint2f*)data).y;
+				cout<<"xyPad value : "<<offset.x<<" "<<offset.y<<endl;
+
+			}
+			break;
+	}
+}
 
 void testApp::update(){
 	grabber.grabFrame();
@@ -142,17 +207,26 @@ void testApp::update(){
 	
 }
 
-void testApp::drawBlock(int x, int y, int z, int wx, int wy, int wz, int type){
+void testApp::drawBlock(int x, int y, int z, int wx, int wy, int wz, Block *bType){
 	//fbo.begin();
 	glPushMatrix();
 	glTranslatef(x,y,z);
 	glScalef(wx,wy,wz);
-	glBegin(GL_POLYGON);
-	glColor3f(1,1,1);
+	Block block = *bType;
+	if(block.textured){
+		textures[block.textureRef].bind();
+	}
+	//grassImage.getTextureReference().bind();
+	
+	glBegin(GL_QUADS);
+	//glColor3f(1,1,1);
+/*
 	switch (type ){
 		case GRASS:
 			
-			glColor3f(0,0.8,0);
+			//glColor3f(0,0.8,0);
+			//grassTexture.bind();
+			
 			
 			break;
 		case COBBLE:
@@ -171,46 +245,52 @@ void testApp::drawBlock(int x, int y, int z, int wx, int wy, int wz, int type){
 			glColor3f(0.8, 0.7, 0.1);
 			break;
 	}
-	
+*/
 	/*      This is the top face*/
-	glVertex3f(0.0f, 0.0f, 0.0f);
-	glVertex3f(0.0f, 0.0f, -1.0f);
-	glVertex3f(-1.0f, 0.0f, -1.0f);
-	glVertex3f(-1.0f, 0.0f, 0.0f);
+	glTexCoord2f(0.0,0.0); 	glVertex3f(0.0f, 0.0f, 0.0f);
+	glTexCoord2f(0.0,1.0);	glVertex3f(0.0f, 0.0f, -1.0f);
+	glTexCoord2f(1.0,1.0);	glVertex3f(-1.0f, 0.0f, -1.0f);
+	glTexCoord2f(1.0,0.0);	glVertex3f(-1.0f, 0.0f, 0.0f);
 	
 	/*      This is the front face*/
-	glVertex3f(0.0f, 0.0f, 0.0f);
-	glVertex3f(-1.0f, 0.0f, 0.0f);
-	glVertex3f(-1.0f, -1.0f, 0.0f);
-	glVertex3f(0.0f, -1.0f, 0.0f);
+	glTexCoord2f(0.0,0.0);	glVertex3f(0.0f, 0.0f, 0.0f);
+	glTexCoord2f(0.0,1.0);	glVertex3f(-1.0f, 0.0f, 0.0f);
+	glTexCoord2f(1.0,1.0);	glVertex3f(-1.0f, -1.0f, 0.0f);
+	glTexCoord2f(1.0,0.0);	glVertex3f(0.0f, -1.0f, 0.0f);
 	
 	/*      This is the right face*/
-	glVertex3f(0.0f, 0.0f, 0.0f);
-	glVertex3f(0.0f, -1.0f, 0.0f);
-	glVertex3f(0.0f, -1.0f, -1.0f);
-	glVertex3f(0.0f, 0.0f, -1.0f);
+	glTexCoord2f(0.0,0.0);	glVertex3f(0.0f, 0.0f, 0.0f);
+	glTexCoord2f(0.0,1.0);	glVertex3f(0.0f, -1.0f, 0.0f);
+	glTexCoord2f(1.0,1.0);	glVertex3f(0.0f, -1.0f, -1.0f);
+	glTexCoord2f(1.0,0.0);	glVertex3f(0.0f, 0.0f, -1.0f);
 	
 	/*      This is the left face*/
-	glVertex3f(-1.0f, 0.0f, 0.0f);
-	glVertex3f(-1.0f, 0.0f, -1.0f);
-	glVertex3f(-1.0f, -1.0f, -1.0f);
-	glVertex3f(-1.0f, -1.0f, 0.0f);
+	glTexCoord2f(0.0,0.0);	glVertex3f(-1.0f, 0.0f, 0.0f);
+	glTexCoord2f(0.0,1.0);	glVertex3f(-1.0f, 0.0f, -1.0f);
+	glTexCoord2f(1.0,1.0);	glVertex3f(-1.0f, -1.0f, -1.0f);
+	glTexCoord2f(1.0,0.0);	glVertex3f(-1.0f, -1.0f, 0.0f);
 	
 	/*      This is the bottom face*/
-	glVertex3f(0.0f, 0.0f, 0.0f);
-	glVertex3f(0.0f, -1.0f, -1.0f);
-	glVertex3f(-1.0f, -1.0f, -1.0f);
-	glVertex3f(-1.0f, -1.0f, 0.0f);
+	glTexCoord2f(0.0,0.0);	glVertex3f(0.0f, 0.0f, 0.0f);
+	glTexCoord2f(0.0,1.0);	glVertex3f(0.0f, -1.0f, -1.0f);
+	glTexCoord2f(1.0,1.0);	glVertex3f(-1.0f, -1.0f, -1.0f);
+	glTexCoord2f(1.0,0.0);	glVertex3f(-1.0f, -1.0f, 0.0f);
 	
 	/*      This is the back face*/
-	glVertex3f(0.0f, 0.0f, 0.0f);
-	glVertex3f(-1.0f, 0.0f, -1.0f);
-	glVertex3f(-1.0f, -1.0f, -1.0f);
-	glVertex3f(0.0f, -1.0f, -1.0f);
-	
+	glTexCoord2f(0.0,0.0);	glVertex3f(0.0f, 0.0f, 0.0f);
+	glTexCoord2f(0.0,1.0);	glVertex3f(-1.0f, 0.0f, -1.0f);
+	glTexCoord2f(1.0,1.0);	glVertex3f(-1.0f, -1.0f, -1.0f);
+	glTexCoord2f(1.0,0.0);	glVertex3f(0.0f, -1.0f, -1.0f);
+
 	glEnd();
+	if(block.textured){
+		textures[block.textureRef].unbind();
+	}
+	//grassImage.getTextureReference().unbind();
+	
+
 	glPopMatrix();
-	//fbo.end();
+	
 	
 }
 
@@ -225,14 +305,16 @@ void testApp::draw(){
 	ofSetColor(255,255,255);
 	grabber.draw(0, 0);
 
-	
+	glPushMatrix();
 	
 	if(bDraw){
 		glEnable (GL_DEPTH_TEST);
+		//glEnable (GL)
 
 		//fbo.begin();
 		//fbo.clear();
 		
+				
 		//glEnable(GL_LIGHTING);
 
 		glViewport(0, 0, 640, 480 );
@@ -241,8 +323,10 @@ void testApp::draw(){
 		glMatrixMode( GL_MODELVIEW );
 		glLoadMatrixf(tracker->getModelViewMatrix());
 		
-		glTranslatef(-100,100,0);
+		glTranslatef(offset.x - 100,offset.y - 100,0);
 		glRotatef(90, 1, 0, 0);
+		glScalef(mapScale, mapScale, mapScale);
+		
 		
 		//x
 		glBegin(GL_LINES);
@@ -265,22 +349,30 @@ void testApp::draw(){
 		glVertex3f(0,0,300);
 		glEnd();
 		//fbo.end();
-				
-		for(int x=0; x < 20; x++){
-			for(int y=0; y < 20; y++){
-				for(int z=0; z < 20; z++){
+		glColor3f(1,1,1);
+						
+		for(int x=0; x < mapWidth; x++){
+			for(int y=0; y < mapHeight; y++){
+				for(int z=0; z < mapDepth; z++){
 					Block b = array3D[x][y][z];
-					if(b.type != NONE){
+					if(b.type != NONE && testVisibility(x,y,z)){
+						
 										
-						drawBlock(x * 10,y * 10,z * 10, 10, 10,10, b.type);
+						drawBlock(x * 10,y * 10,z * 10, 10, 10,10, &b);
 					}
 				}
 			}
 		}
 		//fbo.end();
 	}
-	//fbo.draw(0, 0, 0);
+//	fbo.draw(0, 0, 0);
+	glPopMatrix();
 	
+	if(guiDraw){
+		glDisable (GL_DEPTH_TEST);
+
+		gui->draw();
+	}
 	
 	
 	
@@ -346,7 +438,7 @@ void testApp::processShit(const string& s){
 	if(s.substr(0, 6) == "slice:"){					//<([a-z0-9]*):([0-9]*)>
 		//cout << "slice: " << s << endl;
 		//std::regex pattern("<([a-z0-9]*):([0-9]*)>");		
-		RegularExpression re("<([a-z0-9]*):([0-9]*)>");
+		
 		RegularExpression::MatchVec results;
 		string result;
 		string first, second;
@@ -355,7 +447,7 @@ void testApp::processShit(const string& s){
 		//re.match(s, 0, matches);
 		
 		//vector<string> results;
-		int num = re.match(s, 0, results);
+		int num = sliceRE->match(s, 0, results);
 		
 		while(num != 0){
 			
@@ -379,11 +471,51 @@ void testApp::processShit(const string& s){
 				int type = atoi(first.c_str());
 				//cout << type << "," << endl;
 				array3D[curCount][currentY][currentZ].type = (BlockType)type;
+				array3D[curCount][currentY][currentZ].textured = false;						
+
+				switch ((BlockType)type ){
+					case GRASS:
+						array3D[curCount][currentY][currentZ].textured = true;						
+						array3D[curCount][currentY][currentZ].textureRef = 0;
+						break;
+					case COBBLE:
+						array3D[curCount][currentY][currentZ].textured = true;
+						array3D[curCount][currentY][currentZ].textureRef = 1;
+						break;
+					case LAVA:
+						array3D[curCount][currentY][currentZ].textured = true;
+						array3D[curCount][currentY][currentZ].textureRef = 3;
+						break;
+					case LAVA2:
+						array3D[curCount][currentY][currentZ].textured = true;
+						array3D[curCount][currentY][currentZ].textureRef = 3;
+						break;
+					case STONE:
+						array3D[curCount][currentY][currentZ].textured = true;
+						array3D[curCount][currentY][currentZ].textureRef = 4;
+						break;
+					case DIRT:
+						array3D[curCount][currentY][currentZ].textured = true;
+						array3D[curCount][currentY][currentZ].textureRef = 2;
+						break;
+					case LOGS:
+						array3D[curCount][currentY][currentZ].textured = true;
+						array3D[curCount][currentY][currentZ].textureRef = 7;
+						break;
+					case LEAVES:
+						array3D[curCount][currentY][currentZ].textured = true;
+						array3D[curCount][currentY][currentZ].textureRef = 8;
+						break;
+					case TREE:
+						array3D[curCount][currentY][currentZ].textured = true;
+						array3D[curCount][currentY][currentZ].textureRef = 7;
+						break;
+				}
 				curCount++;
 			}
 			
 			
-			num = re.match(s,results[0].offset + results[0].length , results);
+			num = sliceRE->match(s,results[0].offset + results[0].length , results);
 			
 		}
 		
@@ -399,6 +531,34 @@ void testApp::processShit(const string& s){
 		
 		
 	}
+	
+}
+
+//void testApp::resizeArray(int wx, int wy, int wz){
+	
+bool testApp::testVisibility(int x, int y, int z){
+	if(x <= 0 || x >= mapWidth - 1 ||  y >= mapHeight - 1 || z <= 0 || z >= mapDepth - 1){
+		return true;
+	} else if(y <= 0){
+		return false;
+	} else {
+		BlockType blockTypes[2] = {NONE, SNOW};
+		for(int i = 0; i < 2; i++){
+			
+			
+			if(array3D[x - 1][y][z].type == blockTypes[i] || array3D[x + 1][y][z].type  == blockTypes[i]){
+				return true;
+			}
+			if(array3D[x][y - 1][z].type == blockTypes[i] || array3D[x][y + 1][z].type == blockTypes[i]){
+				return true;
+			}
+			if(array3D[x][y][z - 1].type == blockTypes[i] || array3D[x][y][z + 1].type == blockTypes[i]){
+				return true;
+			}
+		}
+	}
+	return false;
+	
 	
 }
 

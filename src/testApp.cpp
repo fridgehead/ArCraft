@@ -321,8 +321,17 @@ void testApp::draw(){
 	glPushMatrix();
 	
 	if(bDraw){
+
+		bindFbo();
+		glClearColor(0.0, 0.0, 0.0, 0.0);
+		glClearDepth(1.0);
+		glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		
 		
 		glEnable (GL_DEPTH_TEST);
+		glEnable(GL_BLEND);
+		glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
 		glViewport(0, 0, 640, 480 );
 		glMatrixMode( GL_PROJECTION );
 		glLoadMatrixf(tracker->getProjectionMatrix());
@@ -369,14 +378,19 @@ void testApp::draw(){
 			}
 		}
 		//get our depth buffer data
-			
+		
+		glFinish();
+		glFlush();
+		unbindFbo();
+		
 	}
 	glPopMatrix();
-	
+	if(bDraw){
+		drawFbo();
+
+	}
 	//finalImage.draw(0,0);
 	
-	glFinish();
-	glFlush();
 	
 	
 	glReadPixels(0, 0, 640, 480, GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT, sceneDepthBuf);
@@ -622,7 +636,106 @@ bool testApp::testVisibility(int x, int y, int z){
 	
 }
 
+//FBO config
+
+void testApp::bindFbo(){
+	
+	glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, mFBOID);
+	glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, mFBOID);
+	
+	glPushAttrib(GL_VIEWPORT_BIT | GL_ENABLE_BIT);
+	glClearColor(0.0, 0.0, 0.0, 1.0);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+}
+
+void testApp::unbindFbo(){
+	glPopAttrib();
+	
+	//draw this shit -----
+	glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+}	
+
+void testApp::drawFbo(){
+	glEnable(GL_TEXTURE_2D);
+		
+	//bind texture
+	glBindTexture(GL_TEXTURE_2D, mTextureID);
+	glGenerateMipmapEXT(GL_TEXTURE_2D);
+	
+	//ofSetColor(255, 255, 255, 0);	
+	//draw quad
+	
+	//ofSetColor(255, 255, 255);
+	glTranslated(0, 0, 0);
+	glBegin(GL_QUADS);
+	glTexCoord2f(0, 0);
+	glVertex3f(0, 0, 0);
+	glTexCoord2f(0, 1);
+	glVertex3f(640, 0, 1);
+	glTexCoord2f(1, 1);
+	glVertex3f(640, 480, 1);
+	glTexCoord2f(1, 0);
+	glVertex3f(0, 480, 1);
+	glEnd();
+	glBindTexture(GL_TEXTURE_2D, 0);
+	glDisable(GL_TEXTURE_2D);
+	//glDisable(GL_BLEND);
 
 
+}	
+
+void testApp::initFrameBufferDepthBuffer() {  
+	
+	glGenRenderbuffersEXT(1, &mDepthID); // Generate one render buffer and store the ID in mDepthID  
+	glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, mDepthID); // Bind the mDepthID render buffer  
+	
+	glRenderbufferStorageEXT(GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT24, 640, 480); // Set the render buffer storage to be a depth component, with a width and height of the window  
+	
+	glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, mDepthID); // Set the render buffer of this buffer to the depth buffer  
+	
+	glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, 0); // Unbind the render buffer  
+}  
+
+void testApp::initFrameBufferTexture() {  
+	glGenTextures(1, &mTextureID); // Generate one texture  
+	glBindTexture(GL_TEXTURE_2D, mTextureID); // Bind the texture mFBOID  
+	
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 640, 480, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL); // Create a standard texture with the width and height of our window  
+	
+	// Setup the basic texture parameters  
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);  
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);  
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);  
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);  
+	
+	// Unbind the texture  
+	glBindTexture(GL_TEXTURE_2D, 0);  
+}  
+
+void testApp::initFrameBuffer() {  
+	initFrameBufferDepthBuffer(); // Initialize our frame buffer depth buffer  
+	
+	initFrameBufferTexture(); // Initialize our frame buffer texture  
+	
+	glGenFramebuffersEXT(1, &mFBOID); // Generate one frame buffer and store the ID in fbo  
+	glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, mFBOID); // Bind our frame buffer  
+	
+	glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, mTextureID, 0); // Attach the texture mFBOID to the color buffer in our frame buffer  
+	
+	glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, mDepthID); // Attach the depth buffer mDepthID to our frame buffer  
+	
+	GLenum status = glCheckFramebufferStatusEXT(GL_FRAMEBUFFER_EXT); // Check that status of our generated frame buffer  
+	
+	if (status != GL_FRAMEBUFFER_COMPLETE_EXT) // If the frame buffer does not report back as complete  
+	{  
+		std::cout << "Couldn't create frame buffer" << std::endl; // Output an error to the console  
+		//exit(0); // Exit the application  
+	}  else {
+		cout << "BITCHIN " <<endl;
+	}
+	
+	glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0); // Unbind our frame buffer  
+}  
 
 

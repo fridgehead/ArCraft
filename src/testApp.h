@@ -6,13 +6,10 @@
 #include "ofxNetwork.h"
 #include "ofxOpenCv.h"
 #include "Vector.h"
-#include "Poco/RegularExpression.h"
-#include "ofxFBOTexture.h"
-#include "ofxGuiApp.h"
+#include "ofxOpenNI.h"
+#include "ofxVectorMath.h"
 
 
-
-using Poco::RegularExpression;
 
 enum BlockType  {	GRASS = 2, COBBLE = 4, LAVA = 10,
 	LAVA2 = 11, STONE = 1, DIRT = 3,
@@ -29,61 +26,79 @@ struct Block {
 
 
 
-class testApp : public ofxGuiApp {
-
-	public:
-		void setup();
-		void update();
-		void draw();
-
-		void keyPressed  (int key);
-		void keyReleased(int key);
-		void mouseMoved(int x, int y );
-		void mouseDragged(int x, int y, int button);
-		void mousePressed(int x, int y, int button);
-		void mouseReleased(int x, int y, int button);
-		void windowResized(int w, int h);
+class testApp : public ofBaseApp {
 	
-		void drawBlock(int x, int y, int z, int wx, int wy, int wz, Block *bType);
-		void trim(string& str);
-		void processShit(const string& str);
-		void handleGui(int parameterId, int task, void* data, int length);
-		bool testVisibility(int x, int y, int z);
+public:
+	void setup();
+	void update();
+	void draw();
 	
-		float clickX, clickY, rotXAmt, rotYAmt, rotX, rotY;
+	void keyPressed  (int key);
+	void keyReleased(int key);
+	void mouseMoved(int x, int y );
+	void mouseDragged(int x, int y, int button);
+	void mousePressed(int x, int y, int button);
+	void mouseReleased(int x, int y, int button);
+	void windowResized(int w, int h);
 	
-		ofxUDPManager udpConnectionRx;
+	void drawBlock(int x, int y, int z, int wx, int wy, int wz, Block *bType);
+	void trim(string& str);
+	void processShit(const string& str);
+	bool testVisibility(int x, int y, int z);
 	
-		string rxMessage;
-		//Block blocks [30][30][30] ;
-		int mapWidth, mapHeight, mapDepth;
-		bool mapLocked;
+	float clickX, clickY, rotXAmt, rotYAmt, rotX, rotY;
 	
-		vector<vector<vector<Block> > > array3D;
+	//net stuff
+	ofxUDPManager udpConnectionRx;	
+	string rxMessage;
 	
-		
-		bool bDraw;
-		ofVideoGrabber grabber;
-		ofxCvColorImage convert;
-		ofxCvGrayscaleImage gray;
-		
-		ofVideoPlayer jackson;
-		
-		
+	
+	//map data
+	//Block blocks [30][30][30] ;
+	int mapWidth, mapHeight, mapDepth;
+	bool mapLocked;
+	vector<vector<vector<Block> > > array3D;
+	
+	
+	//camera stuff
+	bool bDraw;	
+	ofxOpenNIContext context;
+	ofxDepthGenerator depth;
+	ofxUserGenerator user;
+	
+	ofxImageGenerator image;
+	
+	ofxCvColorImage convert;
+	ofxCvGrayscaleImage gray;
+	
+	ofxCvColorImage kinectImage;
+	ofxCvGrayscaleImage kinectDepthImage;
+	ofxCvGrayscaleImage finalMaskImage;
+	ofxCvGrayscaleImage sceneDepthImage;
+	ofxCvColorImage finalImage;
+	
+	ofVideoGrabber grabber;
+	
+	//temp pixel buffer for depth
+	unsigned char * pixelBuf;
+	unsigned char * colorPixelBuf;
+	unsigned char * finalImageBuf;
+	unsigned short * sceneDepthBuf;
+	unsigned short * kinectDepthBuf;
+	unsigned char * finalBuf;	
 	
 	ofImage grassImage;
 	ofImage textures[9];
 	ofTexture grassTexture;
 	
-		ofxFBOTexture fbo;
-		int mx, my;
+	int mx, my;
 	
 	
 	float mapScale;
 	bool guiDraw;	
 	ofxPoint2f offset;
+	float scVal;
 	
-	RegularExpression * sliceRE;
 	
 };
 

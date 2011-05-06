@@ -11,12 +11,53 @@ static   const char    *tagName = "data/patt.hiro";
 static    unsigned char *cameraBuffer = new unsigned char[numPixels];
 static bool useBCH = true;
 
+//# define KINECT 0
+
+
 //--------------------------------------------------------------
 void testApp::setup(){
+	ofDisableArbTex();
+	ofSetTextureWrap();
+
 	//tracker = new ARToolKitPlus::TrackerSingleMarkerImpl<16,16,64, ARToolKitPlus::PIXEL_FORMAT_RGB565>(640,480);
+	//grabber.initGrabber(640, 480);
+	
+	//camera config
+#ifdef KINECT
+	
+	context.setupUsingXMLFile();
+	image.setup(&context);
+	depth.setup(&context);
+	xn::DepthGenerator& depthGen = depth.getXnDepthGenerator();
+	xn::ImageGenerator& imageGen = image.getXnImageGenerator();
+	
+	
+	XnStatus ret = xnSetViewPoint(depthGen, imageGen);
+	cout << "Using kinect" << endl;
+
+#else
 	grabber.initGrabber(640, 480);
-	convert.allocate(640, 480);
-	gray.allocate(640, 480);
+	cout << "Using grabber" << endl;
+	
+#endif
+	
+	
+	convert.allocate(640, 480);				//conversion of camera image to grayscale
+	gray.allocate(640, 480);				//grayscale tracking image
+	kinectImage.allocate(640, 480);			//image from kinect
+	kinectDepthImage.allocate(640, 480);	//Depth image from kinect
+	finalMaskImage.allocate(640, 480);;		//final composition mask
+	sceneDepthImage.allocate(640, 480);;	//scenes depthmap image
+	finalImage.allocate(640, 480);
+	
+	pixelBuf = new unsigned char[640*480];
+	colorPixelBuf = new unsigned char[640*480*3];
+	sceneDepthBuf = new unsigned short[640 * 480];
+	kinectDepthBuf = new unsigned short[640 * 480];
+	finalBuf = new unsigned char[640 * 480];
+	finalImageBuf = new unsigned char[640 * 480 * 3];
+	
+	
 	bDraw = false;
 	
 	tracker = new ARToolKitPlus::TrackerSingleMarkerImpl<6,6,6, 1, 8>(width,height);
@@ -109,30 +150,16 @@ void testApp::setup(){
 	rotXAmt = 0;
 	rotYAmt = 0;
 	
-	fbo.allocate(640,480, GL_RGBA, 1);
+	//fbo.allocate(640,480, GL_RGBA, 1);
 	
-	
-		
-	mapScale = 1.0f;
-	//do a gui
-	ofxGuiPanel	*panel = gui->addPanel(0, "Panel", 215, 20, 12, OFXGUI_PANEL_SPACING);
-	panel->addSlider(0, "scaleSlider", 125, 15, 0, 10, 10, kofxGui_Display_Int, 1);
-	panel->addXYPad(1, "XYPad", 100 , 100, ofxPoint2f(0,0), ofxPoint2f(200,200),ofxPoint2f(0, 0), kofxGui_Display_Float2, 1);
 	
 	guiDraw = true;
-	gui->activate(true);
+	mapScale = 1.0f;
 	offset.x = 0.0f;
 	offset.y = 0.0f;
 	
-	
-	//regular expressions
-	sliceRE = new RegularExpression("<([a-z0-9]*):([0-9]*)>");
-	
-	
+	scVal = 1.0f;
 		
-						 
-	
-	
 }
 
 
@@ -142,48 +169,52 @@ void testApp::setup(){
  *
  */
 
-void testApp::handleGui(int parameterId, int task, void* data, int length){
-	switch(parameterId){
-		case 0:
-			if(length == sizeof(float)){
-				mapScale = *(float*)data;
-			}	
-			break;
-		case 1:
-			
-			if (task == kofxGui_Set_Point){
-				offset.x = (*(ofxPoint2f*)data).x;
-				offset.y = (*(ofxPoint2f*)data).y;
-				cout<<"xyPad value : "<<offset.x<<" "<<offset.y<<endl;
-
-			}
-			break;
-	}
-}
-
 void testApp::update(){
+#ifdef KINECT
+	
+	
+	context.update();
+	xn::DepthGenerator& depthGen = depth.getXnDepthGenerator();
+	xn::Context& xnCont = context.getXnContext();
+	xn::ImageGenerator& imageGen = image.getXnImageGenerator();
+	const XnDepthPixel* pDepthMap = depthGen.GetDepthMap();
+	const XnRGB24Pixel* pImageMap = imageGen.GetRGB24ImageMap();
+	int ct=0;
+	//get kinect data into open cv
+	for (int y=0; y<XN_VGA_Y_RES ; y++){
+		for(int x=0;x<XN_VGA_X_RES ;x++){
+			
+			colorPixelBuf[ct] = pImageMap[y * XN_VGA_X_RES + x].nRed;
+			colorPixelBuf[ct + 1] =  pImageMap[y * XN_VGA_X_RES + x].nGreen;
+			colorPixelBuf[ct + 2] =  pImageMap[y * XN_VGA_X_RES + x].nBlue;
+			
+			pixelBuf[y * XN_VGA_X_RES + x] = pDepthMap[y * XN_VGA_X_RES + x] / 8;
+			kinectDepthBuf[y * XN_VGA_X_RES + x] = pDepthMap[y * XN_VGA_X_RES +  x];
+			ct += 3;
+		}
+    }
+	kinectImage.setFromPixels(colorPixelBuf, 640, 480);
+	kinectDepthImage.setFromPixels(pixelBuf, 640, 480);
+#else
 	grabber.grabFrame();
-	if(grabber.isFrameNew()){
+	kinectImage.setFromPixels(grabber.getPixels(), 640, 480);
+	
+#endif
+	
+	
+	
+	//convert our camera frame to grayscale
+	convert.setFromPixels(kinectImage.getPixels(), 640, 480);
+	gray = convert;
+	
+	//find the marker and get back the confidence
+	int markerId = tracker->calc(gray.getPixels());
+	float conf = (float)tracker->getConfidence();
+	
+	if( conf > 0.0 ){
+		bDraw = true;
+	}else bDraw = false;
 		
-		//convert our camera frame to grayscale
-		convert.setFromPixels(grabber.getPixels(), 640, 480);
-		gray = convert;
-		
-		//find the marker and get back the confidence
-		int markerId = tracker->calc(gray.getPixels());
-		float conf = (float)tracker->getConfidence();
-		
-		if( conf > 0.0 ){
-			bDraw = true;
-		}else bDraw = false;
-		
-//		printf("\n\nFound marker %d  (confidence %d%%)\n\nPose-Matrix:\n  ", markerId, (int(conf*100.0f)));
-		
-		//prints out the matrix - useful for debugging?
-//		for(int i=0; i<16; i++)
-//			printf("%.2f  %s", tracker->getModelViewMatrix()[i], (i%4==3)?"\n  " : "");
-		
-	}
 	
 	
 	char udpMessage[100000];
@@ -219,33 +250,6 @@ void testApp::drawBlock(int x, int y, int z, int wx, int wy, int wz, Block *bTyp
 	//grassImage.getTextureReference().bind();
 	
 	glBegin(GL_QUADS);
-	//glColor3f(1,1,1);
-/*
-	switch (type ){
-		case GRASS:
-			
-			//glColor3f(0,0.8,0);
-			//grassTexture.bind();
-			
-			
-			break;
-		case COBBLE:
-			glColor3f(0.5,0.5,0.5);
-			break;
-		case LAVA:
-			glColor3f(1,0,0);
-			break;
-		case LAVA2:
-			glColor3f(1,0,0);
-			break;
-		case STONE:
-			glColor3f(0.8,0.8,0.8);
-			break;
-		case DIRT:
-			glColor3f(0.8, 0.7, 0.1);
-			break;
-	}
-*/
 	/*      This is the top face*/
 	glTexCoord2f(0.0,0.0); 	glVertex3f(0.0f, 0.0f, 0.0f);
 	glTexCoord2f(0.0,1.0);	glVertex3f(0.0f, 0.0f, -1.0f);
@@ -281,14 +285,14 @@ void testApp::drawBlock(int x, int y, int z, int wx, int wy, int wz, Block *bTyp
 	glTexCoord2f(0.0,1.0);	glVertex3f(-1.0f, 0.0f, -1.0f);
 	glTexCoord2f(1.0,1.0);	glVertex3f(-1.0f, -1.0f, -1.0f);
 	glTexCoord2f(1.0,0.0);	glVertex3f(0.0f, -1.0f, -1.0f);
-
+	
 	glEnd();
 	if(block.textured){
 		textures[block.textureRef].unbind();
 	}
 	//grassImage.getTextureReference().unbind();
 	
-
+	
 	glPopMatrix();
 	
 	
@@ -297,33 +301,35 @@ void testApp::drawBlock(int x, int y, int z, int wx, int wy, int wz, Block *bTyp
 
 //--------------------------------------------------------------
 void testApp::draw(){
-	glDisable (GL_DEPTH_TEST);
-
+	glEnable (GL_DEPTH_TEST);
 	glClearColor(0.0, 0.0, 0.0, 0.0);
+	glClearDepth(1.0);
 	glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
 	ofSetColor(255,255,255);
-	grabber.draw(0, 0);
+	glDisable (GL_DEPTH_TEST);
+	kinectImage.draw(0, 0);
 
+	if(guiDraw){
+		
+		kinectDepthImage.draw(0,0,160,120);	
+		sceneDepthImage.draw(0,120,160,120);
+		finalMaskImage.draw(0,240, 160,120);
+	}	
+	ofDrawBitmapString(ofToString(scVal), 300,20);
+	
 	glPushMatrix();
 	
 	if(bDraw){
-		glEnable (GL_DEPTH_TEST);
-		//glEnable (GL)
-
-		//fbo.begin();
-		//fbo.clear();
 		
-				
-		//glEnable(GL_LIGHTING);
-
+		glEnable (GL_DEPTH_TEST);
 		glViewport(0, 0, 640, 480 );
 		glMatrixMode( GL_PROJECTION );
 		glLoadMatrixf(tracker->getProjectionMatrix());
 		glMatrixMode( GL_MODELVIEW );
 		glLoadMatrixf(tracker->getModelViewMatrix());
 		
-		glTranslatef(offset.x - 100,offset.y - 100,0);
+		glTranslatef(offset.x,offset.y,0);
 		glRotatef(90, 1, 0, 0);
 		glScalef(mapScale, mapScale, mapScale);
 		
@@ -348,40 +354,74 @@ void testApp::draw(){
 		glVertex3f(0,0,0);
 		glVertex3f(0,0,300);
 		glEnd();
-		//fbo.end();
 		glColor3f(1,1,1);
-						
+		
 		for(int x=0; x < mapWidth; x++){
 			for(int y=0; y < mapHeight; y++){
 				for(int z=0; z < mapDepth; z++){
 					Block b = array3D[x][y][z];
 					if(b.type != NONE && testVisibility(x,y,z)){
 						
-										
+						
 						drawBlock(x * 10,y * 10,z * 10, 10, 10,10, &b);
 					}
 				}
 			}
 		}
-		//fbo.end();
+		//get our depth buffer data
+			
 	}
-//	fbo.draw(0, 0, 0);
 	glPopMatrix();
 	
-	if(guiDraw){
-		glDisable (GL_DEPTH_TEST);
-
-		gui->draw();
+	//finalImage.draw(0,0);
+	
+	glFinish();
+	glFlush();
+	
+	
+	glReadPixels(0, 0, 640, 480, GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT, sceneDepthBuf);
+	//sceneDepthImage.setFromPixels(sceneDepthBuf, 640, 480);
+	
+#ifdef KINECT
+	int ct = 0;
+	for(int x = 0; x < 640 ; x++){
+		for(int y = 0; y < 480 ; y ++){		
+			/*
+			 if(testBuffer[i] > (255 - sceneDepthBuf[i])){
+			 finalBuf[i] = 255;
+			 
+			 } else {
+			 finalBuf[i] = 0;
+			 }
+			 */
+			if(kinectDepthBuf[y * 640 + x] < (65535 - sceneDepthBuf[((480 - y) * 640 + x)]) *  scVal){
+				finalBuf[y * 640 + x] = 255 ;
+				finalImageBuf[y * 640 + x] = colorPixelBuf[y * 640 + x];
+				
+			} else{
+				finalBuf[y * 640 + x] = 0;
+				finalImageBuf[y * 640 + x] = 0;
+			}
+			
+			ct+= 3;
+		}
 	}
-	
-	
-	
+	finalImage.setFromPixels(finalImageBuf, 640, 480);
+	//glColor3f(1, 1, 1);
+	finalMaskImage.setFromPixels(finalBuf, 640, 480);
+#endif
+
 	
 }
 
 
 //--------------------------------------------------------------
 void testApp::keyPressed(int key){
+	if(key == 'w'){
+		scVal += 5;
+	} else if(key == 's'){
+		scVal -= 5;
+	}
 	
 }
 
@@ -439,83 +479,103 @@ void testApp::processShit(const string& s){
 		//cout << "slice: " << s << endl;
 		//std::regex pattern("<([a-z0-9]*):([0-9]*)>");		
 		
-		RegularExpression::MatchVec results;
-		string result;
+		char * results;
+		char * cstr;
+		
 		string first, second;
 		int currentY, currentZ;
+		currentY = 0;
+		currentZ = 0;
 		int curCount = 0;
-		//re.match(s, 0, matches);
+		cstr = new char [s.size()+1];
+		strcpy (cstr, s.c_str());
+		results = strtok(cstr, "<>");
+		if(results == "slice"){
+			results = strtok(NULL, "<>");			
+		}
 		
-		//vector<string> results;
-		int num = sliceRE->match(s, 0, results);
 		
-		while(num != 0){
+		while (results != NULL){
 			
-			
-			first = s.substr(results[1].offset, results[1].length);
-			second = s.substr(results[2].offset, results[2].length);	
-			
-			
-			
-			if(first == "y"){
-				currentY = atoi(second.c_str());
+			/*			
+			 first = s.substr(results[1].offset, results[1].length);
+			 second = s.substr(results[2].offset, results[2].length);	
+			 */
+			string res;
+			res.assign(results);
+			int splitPoint = res.find(":");
+			if(splitPoint != string::npos && splitPoint != res.length()){
+				first = res.substr(0,splitPoint);
 				
-			} else if (first == "z"){
-				currentZ = atoi(second.c_str());
-				//clear that row
-				for(int x = 0; x < 20; x++){
-					array3D[x][currentY][currentZ].type = NONE;
-				}	
-				curCount = 0;
-			} else {
-				int type = atoi(first.c_str());
-				//cout << type << "," << endl;
-				array3D[curCount][currentY][currentZ].type = (BlockType)type;
-				array3D[curCount][currentY][currentZ].textured = false;						
-
-				switch ((BlockType)type ){
-					case GRASS:
-						array3D[curCount][currentY][currentZ].textured = true;						
-						array3D[curCount][currentY][currentZ].textureRef = 0;
-						break;
-					case COBBLE:
-						array3D[curCount][currentY][currentZ].textured = true;
-						array3D[curCount][currentY][currentZ].textureRef = 1;
-						break;
-					case LAVA:
-						array3D[curCount][currentY][currentZ].textured = true;
-						array3D[curCount][currentY][currentZ].textureRef = 3;
-						break;
-					case LAVA2:
-						array3D[curCount][currentY][currentZ].textured = true;
-						array3D[curCount][currentY][currentZ].textureRef = 3;
-						break;
-					case STONE:
-						array3D[curCount][currentY][currentZ].textured = true;
-						array3D[curCount][currentY][currentZ].textureRef = 4;
-						break;
-					case DIRT:
-						array3D[curCount][currentY][currentZ].textured = true;
-						array3D[curCount][currentY][currentZ].textureRef = 2;
-						break;
-					case LOGS:
-						array3D[curCount][currentY][currentZ].textured = true;
-						array3D[curCount][currentY][currentZ].textureRef = 7;
-						break;
-					case LEAVES:
-						array3D[curCount][currentY][currentZ].textured = true;
-						array3D[curCount][currentY][currentZ].textureRef = 8;
-						break;
-					case TREE:
-						array3D[curCount][currentY][currentZ].textured = true;
-						array3D[curCount][currentY][currentZ].textureRef = 7;
-						break;
+				second = res.substr(splitPoint + 1, s.length() - splitPoint);
+				cout  << "first: " << first ;
+				cout  << " second: " << second << endl;
+				
+				if(first == "y"){
+					currentY = atoi(second.c_str());
+					
+				} else if (first == "z"){
+					currentZ = atoi(second.c_str());
+					//clear that row
+					for(int x = 0; x < 20; x++){
+						array3D[x][currentY][currentZ].type = NONE;
+					}	
+					cout << "HOT DOGGETY" << endl;
+					curCount = 0;
+				} else {
+					int type = atoi(first.c_str());
+					//cout << "type: " << type << "," << endl;
+					cout << "added block id: " << type << " at x: " << curCount << " " << currentY << " " << currentZ << endl;
+					array3D[curCount][currentY][currentZ].type = (BlockType)type;
+					array3D[curCount][currentY][currentZ].textured = false;						
+					
+					switch ((BlockType)type ){
+						case GRASS:
+							array3D[curCount][currentY][currentZ].textured = true;						
+							array3D[curCount][currentY][currentZ].textureRef = 0;
+							break;
+						case COBBLE:
+							array3D[curCount][currentY][currentZ].textured = true;
+							array3D[curCount][currentY][currentZ].textureRef = 1;
+							break;
+						case LAVA:
+							array3D[curCount][currentY][currentZ].textured = true;
+							array3D[curCount][currentY][currentZ].textureRef = 3;
+							break;
+						case LAVA2:
+							array3D[curCount][currentY][currentZ].textured = true;
+							array3D[curCount][currentY][currentZ].textureRef = 3;
+							break;
+						case STONE:
+							array3D[curCount][currentY][currentZ].textured = true;
+							array3D[curCount][currentY][currentZ].textureRef = 4;
+							break;
+						case DIRT:
+							array3D[curCount][currentY][currentZ].textured = true;
+							array3D[curCount][currentY][currentZ].textureRef = 2;
+							break;
+						case LOGS:
+							array3D[curCount][currentY][currentZ].textured = true;
+							array3D[curCount][currentY][currentZ].textureRef = 7;
+							break;
+						case LEAVES:
+							array3D[curCount][currentY][currentZ].textured = true;
+							array3D[curCount][currentY][currentZ].textureRef = 8;
+							break;
+						case TREE:
+							array3D[curCount][currentY][currentZ].textured = true;
+							array3D[curCount][currentY][currentZ].textureRef = 7;
+							break;
+					}
+					curCount++;
 				}
-				curCount++;
-			}
+				
+			} 
+		
 			
 			
-			num = sliceRE->match(s,results[0].offset + results[0].length , results);
+			
+			results = strtok(NULL, "<>");
 			
 		}
 		
@@ -535,7 +595,7 @@ void testApp::processShit(const string& s){
 }
 
 //void testApp::resizeArray(int wx, int wy, int wz){
-	
+
 bool testApp::testVisibility(int x, int y, int z){
 	if(x <= 0 || x >= mapWidth - 1 ||  y >= mapHeight - 1 || z <= 0 || z >= mapDepth - 1){
 		return true;

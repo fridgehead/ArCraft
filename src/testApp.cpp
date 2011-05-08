@@ -18,9 +18,8 @@ static bool useBCH = true;
 void testApp::setup(){
 	ofDisableArbTex();
 	ofSetTextureWrap();
-
-	//tracker = new ARToolKitPlus::TrackerSingleMarkerImpl<16,16,64, ARToolKitPlus::PIXEL_FORMAT_RGB565>(640,480);
-	//grabber.initGrabber(640, 480);
+	//configure FBO
+	initFrameBuffer();
 	
 	//camera config
 #ifdef KINECT
@@ -49,14 +48,15 @@ void testApp::setup(){
 	finalMaskImage.allocate(640, 480);;		//final composition mask
 	sceneDepthImage.allocate(640, 480);;	//scenes depthmap image
 	finalImage.allocate(640, 480);
+	sceneImage.allocate(640,480);
 	
-	pixelBuf = new unsigned char[640*480];
-	colorPixelBuf = new unsigned char[640*480*3];
-	sceneDepthBuf = new unsigned short[640 * 480];
-	kinectDepthBuf = new unsigned short[640 * 480];
-	finalBuf = new unsigned char[640 * 480];
-	finalImageBuf = new unsigned char[640 * 480 * 3];
-	
+	pixelBuf = new unsigned char[640*480];			//temp buffer for kinect depth strea
+	colorPixelBuf = new unsigned char[640*480*3];	//temp buffer for kinect image
+	sceneDepthBuf = new unsigned short[640 * 480];	//depth buffer from our rendered scene
+	kinectDepthBuf = new unsigned short[640 * 480];	//camera image buffer
+	finalBuf = new unsigned char[640 * 480];		//final mask buffer
+	finalImageBuf = new unsigned char[640 * 480 * 3];	//final Image buffer
+	sceneBuffer = new unsigned char[640 * 480 * 3];		//copy of the scene in the FBO	
 	
 	bDraw = false;
 	
@@ -159,6 +159,8 @@ void testApp::setup(){
 	offset.y = 0.0f;
 	
 	scVal = 1.0f;
+	
+	whitePoint = ofxVec3f(1,1,1);
 		
 }
 
@@ -243,9 +245,9 @@ void testApp::drawBlock(int x, int y, int z, int wx, int wy, int wz, Block *bTyp
 	glPushMatrix();
 	glTranslatef(x,y,z);
 	glScalef(wx,wy,wz);
-	Block block = *bType;
-	if(block.textured){
-		textures[block.textureRef].bind();
+	//Block block = *bType;
+	if(bType->textured){
+		textures[bType->textureRef].bind();
 	}
 	//grassImage.getTextureReference().bind();
 	
@@ -287,8 +289,8 @@ void testApp::drawBlock(int x, int y, int z, int wx, int wy, int wz, Block *bTyp
 	glTexCoord2f(1.0,0.0);	glVertex3f(0.0f, -1.0f, -1.0f);
 	
 	glEnd();
-	if(block.textured){
-		textures[block.textureRef].unbind();
+	if(bType->textured){
+		textures[bType->textureRef].unbind();
 	}
 	//grassImage.getTextureReference().unbind();
 	
@@ -302,46 +304,27 @@ void testApp::drawBlock(int x, int y, int z, int wx, int wy, int wz, Block *bTyp
 //--------------------------------------------------------------
 void testApp::draw(){
 	glEnable (GL_DEPTH_TEST);
-	glClearColor(0.0, 0.0, 0.0, 0.0);
+	glClearColor(0.0, 0.0, 0.0, 1.0);
 	glClearDepth(1.0);
 	glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	
-	ofSetColor(255,255,255);
-	glDisable (GL_DEPTH_TEST);
-	kinectImage.draw(0, 0);
-
-	if(guiDraw){
-		
-		kinectDepthImage.draw(0,0,160,120);	
-		sceneDepthImage.draw(0,120,160,120);
-		finalMaskImage.draw(0,240, 160,120);
-	}	
-	ofDrawBitmapString(ofToString(scVal), 300,20);
+	glEnable(GL_TEXTURE_2D);
 	
 	glPushMatrix();
 	
 	if(bDraw){
-
 		bindFbo();
-		glClearColor(0.0, 0.0, 0.0, 0.0);
-		glClearDepth(1.0);
-		glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		
-		
-		glEnable (GL_DEPTH_TEST);
-		glEnable(GL_BLEND);
-		glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-		glViewport(0, 0, 640, 480 );
 		glMatrixMode( GL_PROJECTION );
+		glPushMatrix();
 		glLoadMatrixf(tracker->getProjectionMatrix());
-		glMatrixMode( GL_MODELVIEW );
+		glMatrixMode( GL_MODELVIEW );		
+		glPushMatrix();
 		glLoadMatrixf(tracker->getModelViewMatrix());
+				
 		
+
 		glTranslatef(offset.x,offset.y,0);
 		glRotatef(90, 1, 0, 0);
 		glScalef(mapScale, mapScale, mapScale);
-		
 		
 		//x
 		glBegin(GL_LINES);
@@ -378,23 +361,39 @@ void testApp::draw(){
 			}
 		}
 		//get our depth buffer data
-		
-		glFinish();
-		glFlush();
+		glReadPixels(0, 0, 640, 480, GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT, sceneDepthBuf);
+		glReadPixels(0, 0, 640, 480, GL_RGB, GL_UNSIGNED_BYTE, sceneBuffer);
+		glMatrixMode( GL_PROJECTION );
+		glPopMatrix();
+		glMatrixMode( GL_MODELVIEW );		
+		glPopMatrix();
 		unbindFbo();
 		
 	}
 	glPopMatrix();
+	
+	glDisable (GL_DEPTH_TEST);
+	ofEnableAlphaBlending();
+	kinectImage.draw(0, 0);	
+	
 	if(bDraw){
 		drawFbo();
+				
+	}	
+	if(guiDraw){
+		
+		kinectDepthImage.draw(0,0,160,120);	
+		
+		sceneDepthImage.draw(0,120,160,120);
+		finalMaskImage.draw(0,240, 160,120);
+		ofDrawBitmapString(ofToString(scVal), 300,20);
 
-	}
-	//finalImage.draw(0,0);
+	}	
 	
 	
 	
-	glReadPixels(0, 0, 640, 480, GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT, sceneDepthBuf);
-	//sceneDepthImage.setFromPixels(sceneDepthBuf, 640, 480);
+	
+	
 	
 #ifdef KINECT
 	int ct = 0;
@@ -435,6 +434,8 @@ void testApp::keyPressed(int key){
 		scVal += 5;
 	} else if(key == 's'){
 		scVal -= 5;
+	} else if (key == 'g'){
+		guiDraw = !guiDraw;
 	}
 	
 }
@@ -462,6 +463,13 @@ void testApp::mousePressed(int x, int y, int button){
 	clickX = x;
 	clickY = y;
 	cout << mx << " " << my << endl;
+	unsigned char * pix;
+	pix = kinectImage.getPixels();
+	char c = pix[x + y * 640];
+	
+	
+	delete pix;
+	
 	
 }
 
@@ -639,12 +647,10 @@ bool testApp::testVisibility(int x, int y, int z){
 //FBO config
 
 void testApp::bindFbo(){
-	
-	glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, mFBOID);
-	glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, mFBOID);
-	
+	glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, mFBOID);	
 	glPushAttrib(GL_VIEWPORT_BIT | GL_ENABLE_BIT);
-	glClearColor(0.0, 0.0, 0.0, 1.0);
+	glEnable (GL_DEPTH_TEST);
+	glClearColor(0.0, 0.0, 0.0, 0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 }
@@ -652,7 +658,6 @@ void testApp::bindFbo(){
 void testApp::unbindFbo(){
 	glPopAttrib();
 	
-	//draw this shit -----
 	glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
 }	
 
@@ -667,22 +672,21 @@ void testApp::drawFbo(){
 	//draw quad
 	
 	//ofSetColor(255, 255, 255);
+	glPushMatrix();
 	glTranslated(0, 0, 0);
+	
 	glBegin(GL_QUADS);
-	glTexCoord2f(0, 0);
-	glVertex3f(0, 0, 0);
 	glTexCoord2f(0, 1);
-	glVertex3f(640, 0, 1);
+	glVertex3f(0, 0, 0);
 	glTexCoord2f(1, 1);
-	glVertex3f(640, 480, 1);
+	glVertex3f(640, 0, 1);
 	glTexCoord2f(1, 0);
+	glVertex3f(640, 480, 1);
+	glTexCoord2f(0, 0);
 	glVertex3f(0, 480, 1);
 	glEnd();
 	glBindTexture(GL_TEXTURE_2D, 0);
-	glDisable(GL_TEXTURE_2D);
-	//glDisable(GL_BLEND);
-
-
+	glPopMatrix();
 }	
 
 void testApp::initFrameBufferDepthBuffer() {  

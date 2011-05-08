@@ -89,6 +89,7 @@ public:
 	ofxCvGrayscaleImage finalMaskImage;
 	ofxCvGrayscaleImage sceneDepthImage;
 	ofxCvColorImage finalImage;
+	ofxCvColorImage sceneImage;
 	
 	ofVideoGrabber grabber;
 	
@@ -99,6 +100,9 @@ public:
 	unsigned short * sceneDepthBuf;
 	unsigned short * kinectDepthBuf;
 	unsigned char * finalBuf;	
+	unsigned char * sceneBuffer;
+	
+	ofxVec3f whitePoint;
 	
 	ofImage grassImage;
 	ofImage textures[9];

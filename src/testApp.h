@@ -46,6 +46,7 @@ public:
 	void processShit(const string& str);
 	bool testVisibility(int x, int y, int z);
 	
+	/** Fbo init and stuff */
 	void initFrameBufferTexture();
 	void initFrameBufferDepthBuffer();
 	void initFrameBuffer();
@@ -116,6 +117,10 @@ public:
 	ofxPoint2f offset;
 	float scVal;
 	
+	//tracking stuff
+	//ARToolKitPlus::TrackerSingleMarker *tracker;
+
+
 	
 };
 

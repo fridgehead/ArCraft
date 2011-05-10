@@ -1,17 +1,17 @@
 #include "testApp.h"
-#include "ARToolKitPlus/TrackerSingleMarkerImpl.h"
+#include "ARToolKitPlus/TrackerMultiMarkerImpl.h"
 
-ARToolKitPlus::TrackerSingleMarker *tracker;
 static const int       width = 640, height = 480, bpp = 1;
 static   size_t        numPixels = width*height*bpp;
 static    size_t        numBytesRead;
 static   const char    *fName = "data/markerboard_480-499.raw";
 static   const char    *tagName = "data/patt.hiro";
+ARToolKitPlus::TrackerMultiMarker *tracker;
 
 static    unsigned char *cameraBuffer = new unsigned char[numPixels];
 static bool useBCH = true;
 
-#define KINECT 0
+//#define KINECT 0
 
 
 //--------------------------------------------------------------
@@ -60,7 +60,8 @@ void testApp::setup(){
 	
 	bDraw = false;
 	
-	tracker = new ARToolKitPlus::TrackerSingleMarkerImpl<6,6,6, 1, 8>(width,height);
+	//tracker = new ARToolKitPlus::TrackerSingleMarkerImpl<6,6,6, 1, 8>(width,height);
+	tracker = new ARToolKitPlus::TrackerMultiMarkerImpl<6,6,6, 1, 8>(width,height);
 	
 	const char* description = tracker->getDescription();
 	printf("ARToolKitPlus compile-time information:\n%s\n\n", description);
@@ -69,7 +70,7 @@ void testApp::setup(){
     
 	tracker->setPixelFormat(ARToolKitPlus::PIXEL_FORMAT_LUM);	
 	
-    if( !tracker->init( (const char *)ofToDataPath("LogitechPro4000.dat").c_str(), 1.0f, 1000.0f) )            // load std. ARToolKit camera file
+    if( !tracker->init( (const char *)ofToDataPath("LogitechPro4000.dat").c_str(), (const char *)ofToDataPath("markerboard_480-499.cfg").c_str(), 1.0f, 1000.0f) )            // load std. ARToolKit camera file
 	{
 		printf("ERROR: init() failed\n");
 		delete cameraBuffer;
@@ -78,10 +79,10 @@ void testApp::setup(){
 	}
 	
     // define size of the marker
-    tracker->setPatternWidth(80);
+   // tracker->setPatternWidth(80);
 	
 	// the marker in the BCH test image has a thin border...
-    tracker->setBorderWidth(useBCH ? 0.125f : 0.250f);
+    tracker->setBorderWidth(0.125f);
 	
     // set a threshold. alternatively we could also activate automatic thresholding
     tracker->setThreshold(150);
@@ -95,8 +96,7 @@ void testApp::setup(){
 	
     // switch to simple ID based markers
     // use the tool in tools/IdPatGen to generate markers
-    tracker->setMarkerMode(useBCH ? ARToolKitPlus::MARKER_ID_BCH : ARToolKitPlus::MARKER_ID_SIMPLE);
-	
+    tracker->setMarkerMode(ARToolKitPlus::MARKER_ID_SIMPLE);
 	
 	udpConnectionRx.Create();
 	udpConnectionRx.Bind(19802); //incomming data on my port # ...
@@ -136,9 +136,8 @@ void testApp::setup(){
 	for(int x=0; x < mapWidth; x++){
 		for(int y=0; y < mapHeight; y++){
 			for(int z=0; z < mapDepth; z++){
-				b.type = GRASS;
-				b.textured = true;
-				b.textureRef = 0;
+				b.type = NONE;
+				b.textured = false;
 
 				array3D[x][y][z] = b;
 			}
@@ -212,9 +211,10 @@ void testApp::update(){
 	
 	//find the marker and get back the confidence
 	int markerId = tracker->calc(gray.getPixels());
-	float conf = (float)tracker->getConfidence();
-	
-	if( conf > 0.0 ){
+//	float conf = (float)tracker->getConfidence();
+	int conf = tracker->getNumDetectedMarkers();
+	cout << conf << endl;
+	if( conf > 0 ){
 		bDraw = true;
 	}else bDraw = false;
 		

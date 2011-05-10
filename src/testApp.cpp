@@ -11,7 +11,7 @@ static   const char    *tagName = "data/patt.hiro";
 static    unsigned char *cameraBuffer = new unsigned char[numPixels];
 static bool useBCH = true;
 
-//# define KINECT 0
+#define KINECT 0
 
 
 //--------------------------------------------------------------
@@ -136,9 +136,10 @@ void testApp::setup(){
 	for(int x=0; x < mapWidth; x++){
 		for(int y=0; y < mapHeight; y++){
 			for(int z=0; z < mapDepth; z++){
-				b.type = NONE;
-				b.textured = false;
-				
+				b.type = GRASS;
+				b.textured = true;
+				b.textureRef = 0;
+
 				array3D[x][y][z] = b;
 			}
 		}
@@ -362,7 +363,7 @@ void testApp::draw(){
 		}
 		//get our depth buffer data
 		glReadPixels(0, 0, 640, 480, GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT, sceneDepthBuf);
-		glReadPixels(0, 0, 640, 480, GL_RGB, GL_UNSIGNED_BYTE, sceneBuffer);
+		//glReadPixels(0, 0, 640, 480, GL_RGB, GL_UNSIGNED_BYTE, sceneBuffer);
 		glMatrixMode( GL_PROJECTION );
 		glPopMatrix();
 		glMatrixMode( GL_MODELVIEW );		
@@ -397,31 +398,21 @@ void testApp::draw(){
 	
 #ifdef KINECT
 	int ct = 0;
-	for(int x = 0; x < 640 ; x++){
-		for(int y = 0; y < 480 ; y ++){		
-			/*
-			 if(testBuffer[i] > (255 - sceneDepthBuf[i])){
-			 finalBuf[i] = 255;
-			 
-			 } else {
-			 finalBuf[i] = 0;
-			 }
-			 */
-			if(kinectDepthBuf[y * 640 + x] < (65535 - sceneDepthBuf[((480 - y) * 640 + x)]) *  scVal){
-				finalBuf[y * 640 + x] = 255 ;
-				finalImageBuf[y * 640 + x] = colorPixelBuf[y * 640 + x];
-				
-			} else{
-				finalBuf[y * 640 + x] = 0;
-				finalImageBuf[y * 640 + x] = 0;
-			}
-			
-			ct+= 3;
+	for(int p = 0; p < 640 * 480 ; p++){
+		unsigned short kinectVal = kinectDepthBuf[p];
+		unsigned short sceneVal = USHRT_MAX - sceneDepthBuf[p];
+		
+		if(kinectVal > sceneVal){
+			finalBuf[p] = 255;
+		} else {
+			finalBuf[p] = 0;
 		}
+		
 	}
-	finalImage.setFromPixels(finalImageBuf, 640, 480);
+	//finalImage.setFromPixels(finalImageBuf, 640, 480);
 	//glColor3f(1, 1, 1);
 	finalMaskImage.setFromPixels(finalBuf, 640, 480);
+
 #endif
 
 	
@@ -652,6 +643,8 @@ void testApp::bindFbo(){
 	glEnable (GL_DEPTH_TEST);
 	glClearColor(0.0, 0.0, 0.0, 0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	
+	
 
 }
 

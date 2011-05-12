@@ -8,7 +8,8 @@
 #include "Vector.h"
 #include "ofxOpenNI.h"
 #include "ofxVectorMath.h"
-
+#include "NetworkThread.h"
+class NetworkThread;
 
 
 enum BlockType  {	GRASS = 2, COBBLE = 4, LAVA = 10,
@@ -32,6 +33,7 @@ public:
 	void setup();
 	void update();
 	void draw();
+	void stop();
 	
 	void keyPressed  (int key);
 	void keyReleased(int key);
@@ -63,8 +65,10 @@ public:
 	float clickX, clickY, rotXAmt, rotYAmt, rotX, rotY;
 	
 	//net stuff
-	ofxUDPManager udpConnectionRx;	
-	string rxMessage;
+	//ofxUDPManager udpConnectionRx;	
+	//string rxMessage;
+	
+	NetworkThread* netThread;
 	
 	
 	//map data
@@ -119,7 +123,7 @@ public:
 	
 	//tracking stuff
 	//ARToolKitPlus::TrackerSingleMarker *tracker;
-
+	ofColor sceneWhiteLevel;
 
 	
 };

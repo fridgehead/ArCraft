@@ -63,11 +63,6 @@ void testApp::setup(){
 	//tracker = new ARToolKitPlus::TrackerSingleMarkerImpl<6,6,6, 1, 8>(width,height);
 	tracker = new ARToolKitPlus::TrackerMultiMarkerImpl<6,6,6, 1, 8>(width,height);
 	
-	const char* description = tracker->getDescription();
-	printf("ARToolKitPlus compile-time information:\n%s\n\n", description);
-	
-    // set a logger so we can output error messages
-    
 	tracker->setPixelFormat(ARToolKitPlus::PIXEL_FORMAT_LUM);	
 	
     if( !tracker->init( (const char *)ofToDataPath("LogitechPro4000.dat").c_str(), (const char *)ofToDataPath("markerboard_480-499.cfg").c_str(), 1.0f, 1000.0f) )            // load std. ARToolKit camera file
@@ -77,16 +72,10 @@ void testApp::setup(){
 		delete tracker;
 		return;
 	}
-	
-    // define size of the marker
-   // tracker->setPatternWidth(80);
-	
 	// the marker in the BCH test image has a thin border...
-    tracker->setBorderWidth(0.125f);
-	
+    tracker->setBorderWidth(0.125f);	
     // set a threshold. alternatively we could also activate automatic thresholding
-    tracker->setThreshold(150);
-	
+    tracker->setThreshold(150);	
     // let's use lookup-table undistortion for high-speed
     // note: LUT only works with images up to 1024x1024
     tracker->setUndistortionMode(ARToolKitPlus::UNDIST_LUT);
@@ -97,11 +86,13 @@ void testApp::setup(){
     // switch to simple ID based markers
     // use the tool in tools/IdPatGen to generate markers
     tracker->setMarkerMode(ARToolKitPlus::MARKER_ID_SIMPLE);
-	
+	/*
 	udpConnectionRx.Create();
 	udpConnectionRx.Bind(19802); //incomming data on my port # ...
 	udpConnectionRx.SetNonBlocking(true);
-	
+	*/
+	netThread = new NetworkThread(this);
+	netThread->start();
 	
 	//load textures
 	ofDisableArbTex();
@@ -117,9 +108,9 @@ void testApp::setup(){
 	textures[8].loadImage("leaves.png");
 	
 	
-	mapWidth = 40;
+	mapWidth = 20;
 	mapHeight = 20;
-	mapDepth = 40;
+	mapDepth = 20;
 	mapLocked = false;
 	
 	//fill our 3d vector with 20x20x20
@@ -155,13 +146,12 @@ void testApp::setup(){
 	
 	guiDraw = true;
 	mapScale = 1.0f;
-	offset.x = 0.0f;
-	offset.y = 0.0f;
+	offset.x = -100.0f;
+	offset.y = 100.0f;
 	
 	scVal = 1.0f;
 	
-	whitePoint = ofxVec3f(1,1,1);
-		
+	sceneWhiteLevel = ofColor(255,255,255);
 }
 
 
@@ -170,6 +160,11 @@ void testApp::setup(){
 /* slice:<y:0><z:0><0:1><0:1>
  *
  */
+
+void testApp::stop(){
+	netThread->stop();
+	delete netThread;
+}
 
 void testApp::update(){
 #ifdef KINECT
@@ -213,12 +208,12 @@ void testApp::update(){
 	int markerId = tracker->calc(gray.getPixels());
 //	float conf = (float)tracker->getConfidence();
 	int conf = tracker->getNumDetectedMarkers();
-	cout << conf << endl;
+	//cout << conf << endl;
 	if( conf > 0 ){
 		bDraw = true;
 	}else bDraw = false;
 		
-	
+	/*
 	
 	char udpMessage[100000];
 	udpConnectionRx.Receive(udpMessage,100000);
@@ -231,7 +226,7 @@ void testApp::update(){
 		//process this shit
 		processShit(s);
 		
-	}
+	}*/
 	
 	rotX += rotXAmt;
 	rotY += rotYAmt;
@@ -378,7 +373,9 @@ void testApp::draw(){
 	kinectImage.draw(0, 0);	
 	
 	if(bDraw){
+		ofSetColor(sceneWhiteLevel);
 		drawFbo();
+		ofSetColor(255,255,255);
 				
 	}	
 	if(guiDraw){
@@ -440,6 +437,9 @@ void testApp::keyReleased(int key){
 void testApp::mouseMoved(int x, int y ){
 	mx = x;
 	my = y;
+	
+	//offset.x = -mx;
+	//offset.y = my;
 }
 
 //--------------------------------------------------------------
@@ -456,10 +456,12 @@ void testApp::mousePressed(int x, int y, int button){
 	cout << mx << " " << my << endl;
 	unsigned char * pix;
 	pix = kinectImage.getPixels();
-	char c = pix[x + y * 640];
+	unsigned char r = pix[x + y * 640];
+	unsigned char g = pix[x + y * 640 + 1];
+	unsigned char b = pix[x + y * 640 + 2];
 	
-	
-	delete pix;
+	cout << "r: " << r << " g: " << g << " b: " << b << endl;
+	sceneWhiteLevel = ofColor(r,g,b);
 	
 	
 }
@@ -521,8 +523,8 @@ void testApp::processShit(const string& s){
 				first = res.substr(0,splitPoint);
 				
 				second = res.substr(splitPoint + 1, s.length() - splitPoint);
-				cout  << "first: " << first ;
-				cout  << " second: " << second << endl;
+				//cout  << "first: " << first ;
+				//cout  << " second: " << second << endl;
 				
 				if(first == "y"){
 					currentY = atoi(second.c_str());
@@ -533,12 +535,12 @@ void testApp::processShit(const string& s){
 					for(int x = 0; x < 20; x++){
 						array3D[x][currentY][currentZ].type = NONE;
 					}	
-					cout << "HOT DOGGETY" << endl;
+				//	cout << "HOT DOGGETY" << endl;
 					curCount = 0;
 				} else {
 					int type = atoi(first.c_str());
 					//cout << "type: " << type << "," << endl;
-					cout << "added block id: " << type << " at x: " << curCount << " " << currentY << " " << currentZ << endl;
+				//	cout << "added block id: " << type << " at x: " << curCount << " " << currentY << " " << currentZ << endl;
 					array3D[curCount][currentY][currentZ].type = (BlockType)type;
 					array3D[curCount][currentY][currentZ].textured = false;						
 					
@@ -598,6 +600,9 @@ void testApp::processShit(const string& s){
 	} else if(s.substr(0, 4) == "del:"){			//<([-]?[0-9]*):([-]?[0-9]*):([-]?[0-9]*)>
 	} else if(s.substr(0, 4) == "add:"){			//<([0-9]*)><([-]?[0-9]*):([-]?[0-9]*):([-]?[0-9]*)>
 	} else if(s.substr(0, 7) == "player:"){			//<([0-9]*)><([-]?[0-9\\.]*):([-]?[0-9\\.]*):([-]?[0-9\\.]*)>
+		//get the player pos, this should happen every 50ms
+		
+		
 	} else if(s.substr(0, 9) == "starting:"){		//<([-]?[0-9]*)><([-]?[0-9]*)><([-]?[0-9]*)><([-]?[0-9]*)><([-]?[0-9]*)><([-]?[0-9]*)>
 		
 		

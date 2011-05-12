@@ -8,8 +8,6 @@ static   const char    *fName = "data/markerboard_480-499.raw";
 static   const char    *tagName = "data/patt.hiro";
 ARToolKitPlus::TrackerMultiMarker *tracker;
 
-static    unsigned char *cameraBuffer = new unsigned char[numPixels];
-static bool useBCH = true;
 
 //#define KINECT 0
 
@@ -68,7 +66,6 @@ void testApp::setup(){
     if( !tracker->init( (const char *)ofToDataPath("LogitechPro4000.dat").c_str(), (const char *)ofToDataPath("markerboard_480-499.cfg").c_str(), 1.0f, 1000.0f) )            // load std. ARToolKit camera file
 	{
 		printf("ERROR: init() failed\n");
-		delete cameraBuffer;
 		delete tracker;
 		return;
 	}
@@ -164,6 +161,13 @@ void testApp::setup(){
 void testApp::stop(){
 	netThread->stop();
 	delete netThread;
+	delete tracker;
+
+#ifdef KINECT
+	
+#else
+	grabber.close();
+#endif
 }
 
 void testApp::update(){

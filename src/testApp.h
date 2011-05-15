@@ -9,7 +9,10 @@
 #include "ofxOpenNI.h"
 #include "ofxVectorMath.h"
 #include "NetworkThread.h"
+#include "ofxSyphon.h"
+
 class NetworkThread;
+
 
 
 enum BlockType  {	GRASS = 2, COBBLE = 4, LAVA = 10,
@@ -21,10 +24,23 @@ struct Block {
 	BlockType type;
 	int textureRef;
 	bool textured;
+	int visMask;
 	
 };
 
+#define VIS_TOP 1
+#define VIS_BOTTOM 2
+#define VIS_LEFT 4
+#define VIS_RIGHT 8
+#define VIS_BACK 16
+#define VIS_FRONT 32
 
+struct Player {
+	int entityId;
+	int xPos;
+	int yPos;
+	int zPos;
+};
 
 
 class testApp : public ofBaseApp {
@@ -46,7 +62,7 @@ public:
 	void drawBlock(int x, int y, int z, int wx, int wy, int wz, Block *bType);
 	void trim(string& str);
 	void processShit(const string& str);
-	bool testVisibility(int x, int y, int z);
+	void updateVisibility();
 	
 	/** Fbo init and stuff */
 	void initFrameBufferTexture();
@@ -69,6 +85,10 @@ public:
 	//string rxMessage;
 	
 	NetworkThread* netThread;
+	
+	//syphon test
+	ofxSyphonServer mainOutputSyphonServer;
+
 	
 	
 	//map data

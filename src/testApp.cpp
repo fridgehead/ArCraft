@@ -1,7 +1,7 @@
 #include "testApp.h"
 #include "ARToolKitPlus/TrackerMultiMarkerImpl.h"
 
-static const int       width = 640, height = 480, bpp = 1;
+static const int       width = 640	, height = 480, bpp = 1;
 static   size_t        numPixels = width*height*bpp;
 static    size_t        numBytesRead;
 static   const char    *fName = "data/markerboard_480-499.raw";
@@ -126,7 +126,7 @@ void testApp::setup(){
 			for(int z=0; z < mapDepth; z++){
 				b.type = NONE;
 				b.textured = false;
-
+				b.visMask = 63;
 				array3D[x][y][z] = b;
 			}
 		}
@@ -149,6 +149,10 @@ void testApp::setup(){
 	scVal = 1.0f;
 	
 	sceneWhiteLevel = ofColor(255,255,255);
+	mainOutputSyphonServer.setName("Minecraft");
+	
+	
+	ofSetFrameRate(60);
 }
 
 
@@ -251,43 +255,53 @@ void testApp::drawBlock(int x, int y, int z, int wx, int wy, int wz, Block *bTyp
 	}
 	//grassImage.getTextureReference().bind();
 	
+	
+	
 	glBegin(GL_QUADS);
-	/*      This is the top face*/
-	glTexCoord2f(0.0,0.0); 	glVertex3f(0.0f, 0.0f, 0.0f);
-	glTexCoord2f(0.0,1.0);	glVertex3f(0.0f, 0.0f, -1.0f);
-	glTexCoord2f(1.0,1.0);	glVertex3f(-1.0f, 0.0f, -1.0f);
-	glTexCoord2f(1.0,0.0);	glVertex3f(-1.0f, 0.0f, 0.0f);
+	if(bType->visMask && VIS_TOP){
+		/*      This is the top face*/
+		glTexCoord2f(0.0,0.0); 	glVertex3f(0.0f, 0.0f, 0.0f);
+		glTexCoord2f(0.0,1.0);	glVertex3f(0.0f, 0.0f, -1.0f);
+		glTexCoord2f(1.0,1.0);	glVertex3f(-1.0f, 0.0f, -1.0f);
+		glTexCoord2f(1.0,0.0);	glVertex3f(-1.0f, 0.0f, 0.0f);
+	}
 	
-	/*      This is the front face*/
-	glTexCoord2f(0.0,0.0);	glVertex3f(0.0f, 0.0f, 0.0f);
-	glTexCoord2f(0.0,1.0);	glVertex3f(-1.0f, 0.0f, 0.0f);
-	glTexCoord2f(1.0,1.0);	glVertex3f(-1.0f, -1.0f, 0.0f);
-	glTexCoord2f(1.0,0.0);	glVertex3f(0.0f, -1.0f, 0.0f);
+	if(bType->visMask && VIS_FRONT){
+		/*      This is the front face*/
+		glTexCoord2f(0.0,0.0);	glVertex3f(0.0f, 0.0f, 0.0f);
+		glTexCoord2f(0.0,1.0);	glVertex3f(-1.0f, 0.0f, 0.0f);
+		glTexCoord2f(1.0,1.0);	glVertex3f(-1.0f, -1.0f, 0.0f);
+		glTexCoord2f(1.0,0.0);	glVertex3f(0.0f, -1.0f, 0.0f);
+	}
 	
-	/*      This is the right face*/
-	glTexCoord2f(0.0,0.0);	glVertex3f(0.0f, 0.0f, 0.0f);
-	glTexCoord2f(0.0,1.0);	glVertex3f(0.0f, -1.0f, 0.0f);
-	glTexCoord2f(1.0,1.0);	glVertex3f(0.0f, -1.0f, -1.0f);
-	glTexCoord2f(1.0,0.0);	glVertex3f(0.0f, 0.0f, -1.0f);
-	
-	/*      This is the left face*/
-	glTexCoord2f(0.0,0.0);	glVertex3f(-1.0f, 0.0f, 0.0f);
-	glTexCoord2f(0.0,1.0);	glVertex3f(-1.0f, 0.0f, -1.0f);
-	glTexCoord2f(1.0,1.0);	glVertex3f(-1.0f, -1.0f, -1.0f);
-	glTexCoord2f(1.0,0.0);	glVertex3f(-1.0f, -1.0f, 0.0f);
-	
-	/*      This is the bottom face*/
-	glTexCoord2f(0.0,0.0);	glVertex3f(0.0f, 0.0f, 0.0f);
-	glTexCoord2f(0.0,1.0);	glVertex3f(0.0f, -1.0f, -1.0f);
-	glTexCoord2f(1.0,1.0);	glVertex3f(-1.0f, -1.0f, -1.0f);
-	glTexCoord2f(1.0,0.0);	glVertex3f(-1.0f, -1.0f, 0.0f);
-	
-	/*      This is the back face*/
-	glTexCoord2f(0.0,0.0);	glVertex3f(0.0f, 0.0f, 0.0f);
-	glTexCoord2f(0.0,1.0);	glVertex3f(-1.0f, 0.0f, -1.0f);
-	glTexCoord2f(1.0,1.0);	glVertex3f(-1.0f, -1.0f, -1.0f);
-	glTexCoord2f(1.0,0.0);	glVertex3f(0.0f, -1.0f, -1.0f);
-	
+	if(bType->visMask && VIS_RIGHT){
+		/*      This is the right face*/
+		glTexCoord2f(0.0,0.0);	glVertex3f(0.0f, 0.0f, 0.0f);
+		glTexCoord2f(0.0,1.0);	glVertex3f(0.0f, -1.0f, 0.0f);
+		glTexCoord2f(1.0,1.0);	glVertex3f(0.0f, -1.0f, -1.0f);
+		glTexCoord2f(1.0,0.0);	glVertex3f(0.0f, 0.0f, -1.0f);
+	}
+	if(bType->visMask && VIS_LEFT){
+		/*      This is the left face*/
+		glTexCoord2f(0.0,0.0);	glVertex3f(-1.0f, 0.0f, 0.0f);
+		glTexCoord2f(0.0,1.0);	glVertex3f(-1.0f, 0.0f, -1.0f);
+		glTexCoord2f(1.0,1.0);	glVertex3f(-1.0f, -1.0f, -1.0f);
+		glTexCoord2f(1.0,0.0);	glVertex3f(-1.0f, -1.0f, 0.0f);
+	}
+	if(bType->visMask && VIS_BOTTOM){
+		/*      This is the bottom face*/
+		glTexCoord2f(0.0,0.0);	glVertex3f(0.0f, 0.0f, 0.0f);
+		glTexCoord2f(0.0,1.0);	glVertex3f(0.0f, -1.0f, -1.0f);
+		glTexCoord2f(1.0,1.0);	glVertex3f(-1.0f, -1.0f, -1.0f);
+		glTexCoord2f(1.0,0.0);	glVertex3f(-1.0f, -1.0f, 0.0f);
+	}
+	if(bType->visMask && VIS_BACK){
+		/*      This is the back face*/
+		glTexCoord2f(0.0,0.0);	glVertex3f(0.0f, 0.0f, 0.0f);
+		glTexCoord2f(0.0,1.0);	glVertex3f(-1.0f, 0.0f, -1.0f);
+		glTexCoord2f(1.0,1.0);	glVertex3f(-1.0f, -1.0f, -1.0f);
+		glTexCoord2f(1.0,0.0);	glVertex3f(0.0f, -1.0f, -1.0f);
+	}
 	glEnd();
 	if(bType->textured){
 		textures[bType->textureRef].unbind();
@@ -352,7 +366,7 @@ void testApp::draw(){
 			for(int y=0; y < mapHeight; y++){
 				for(int z=0; z < mapDepth; z++){
 					Block b = array3D[x][y][z];
-					if(b.type != NONE && testVisibility(x,y,z)){
+					if(b.type != NONE && b.visMask != 0){
 						
 						
 						drawBlock(x * 10,y * 10,z * 10, 10, 10,10, &b);
@@ -361,7 +375,7 @@ void testApp::draw(){
 			}
 		}
 		//get our depth buffer data
-		glReadPixels(0, 0, 640, 480, GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT, sceneDepthBuf);
+		//glReadPixels(0, 0, 640, 480, GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT, sceneDepthBuf);
 		//glReadPixels(0, 0, 640, 480, GL_RGB, GL_UNSIGNED_BYTE, sceneBuffer);
 		glMatrixMode( GL_PROJECTION );
 		glPopMatrix();
@@ -415,7 +429,7 @@ void testApp::draw(){
 	finalMaskImage.setFromPixels(finalBuf, 640, 480);
 
 #endif
-
+	mainOutputSyphonServer.publishScreen();
 	
 }
 
@@ -494,113 +508,96 @@ void testApp::trim(string& str)
 
 
 void testApp::processShit(const string& s){
-	if(s.substr(0, 6) == "slice:"){					//<([a-z0-9]*):([0-9]*)>
-		//cout << "slice: " << s << endl;
-		//std::regex pattern("<([a-z0-9]*):([0-9]*)>");		
-		
-		char * results;
-		char * cstr;
-		
-		string first, second;
+	char * results;
+	char * cstr;
+	//cout << "mess: " << s << endl;
+
+	cstr = new char [s.size()+1];
+	strcpy (cstr, s.c_str());
+	results = strtok(cstr, ",");
+
+	if(results[0]  == 's'){	
+		//cout << "mess: " << results[0] <<endl;
 		int currentY, currentZ;
 		currentY = 0;
 		currentZ = 0;
 		int curCount = 0;
-		cstr = new char [s.size()+1];
-		strcpy (cstr, s.c_str());
-		results = strtok(cstr, "<>");
-		if(results == "slice"){
-			results = strtok(NULL, "<>");			
-		}
+		int ct = 0;
+
 		
 		
 		while (results != NULL){
 			
-			/*			
-			 first = s.substr(results[1].offset, results[1].length);
-			 second = s.substr(results[2].offset, results[2].length);	
-			 */
-			string res;
-			res.assign(results);
-			int splitPoint = res.find(":");
-			if(splitPoint != string::npos && splitPoint != res.length()){
-				first = res.substr(0,splitPoint);
-				
-				second = res.substr(splitPoint + 1, s.length() - splitPoint);
-				//cout  << "first: " << first ;
-				//cout  << " second: " << second << endl;
-				
-				if(first == "y"){
-					currentY = atoi(second.c_str());
-					
-				} else if (first == "z"){
-					currentZ = atoi(second.c_str());
-					//clear that row
-					for(int x = 0; x < 20; x++){
-						array3D[x][currentY][currentZ].type = NONE;
-					}	
+			if(ct == 1){
+				currentY = atoi(results);
+				cout << "cy: " << currentY << endl;
+				ct++;
+			} else if (ct == 2){
+				currentZ = atoi(results);
+				cout << "cz: " << currentZ << endl;
+
+				//clear that row
+				for(int x = 0; x < 20; x++){
+					array3D[x][currentY][currentZ].type = NONE;
+				}	
 				//	cout << "HOT DOGGETY" << endl;
-					curCount = 0;
-				} else {
-					int type = atoi(first.c_str());
-					//cout << "type: " << type << "," << endl;
+				curCount = 0;
+				ct++;
+			} else {
+				int type = atoi(results);
+				//cout << "type: " << type << "," << endl;
 				//	cout << "added block id: " << type << " at x: " << curCount << " " << currentY << " " << currentZ << endl;
-					array3D[curCount][currentY][currentZ].type = (BlockType)type;
-					array3D[curCount][currentY][currentZ].textured = false;						
-					
-					switch ((BlockType)type ){
-						case GRASS:
-							array3D[curCount][currentY][currentZ].textured = true;						
-							array3D[curCount][currentY][currentZ].textureRef = 0;
-							break;
-						case COBBLE:
-							array3D[curCount][currentY][currentZ].textured = true;
-							array3D[curCount][currentY][currentZ].textureRef = 1;
-							break;
-						case LAVA:
-							array3D[curCount][currentY][currentZ].textured = true;
-							array3D[curCount][currentY][currentZ].textureRef = 3;
-							break;
-						case LAVA2:
-							array3D[curCount][currentY][currentZ].textured = true;
-							array3D[curCount][currentY][currentZ].textureRef = 3;
-							break;
-						case STONE:
-							array3D[curCount][currentY][currentZ].textured = true;
-							array3D[curCount][currentY][currentZ].textureRef = 4;
-							break;
-						case DIRT:
-							array3D[curCount][currentY][currentZ].textured = true;
-							array3D[curCount][currentY][currentZ].textureRef = 2;
-							break;
-						case LOGS:
-							array3D[curCount][currentY][currentZ].textured = true;
-							array3D[curCount][currentY][currentZ].textureRef = 7;
-							break;
-						case LEAVES:
-							array3D[curCount][currentY][currentZ].textured = true;
-							array3D[curCount][currentY][currentZ].textureRef = 8;
-							break;
-						case TREE:
-							array3D[curCount][currentY][currentZ].textured = true;
-							array3D[curCount][currentY][currentZ].textureRef = 7;
-							break;
-					}
-					curCount++;
-				}
+				array3D[curCount][currentY][currentZ].type = (BlockType)type;
+				array3D[curCount][currentY][currentZ].textured = false;						
 				
-			} 
-		
-			
-			
-			
-			results = strtok(NULL, "<>");
+				switch ((BlockType)type ){
+					case GRASS:
+						array3D[curCount][currentY][currentZ].textured = true;						
+						array3D[curCount][currentY][currentZ].textureRef = 0;
+						break;
+					case COBBLE:
+						array3D[curCount][currentY][currentZ].textured = true;
+						array3D[curCount][currentY][currentZ].textureRef = 1;
+						break;
+					case LAVA:
+						array3D[curCount][currentY][currentZ].textured = true;
+						array3D[curCount][currentY][currentZ].textureRef = 3;
+						break;
+					case LAVA2:
+						array3D[curCount][currentY][currentZ].textured = true;
+						array3D[curCount][currentY][currentZ].textureRef = 3;
+						break;
+					case STONE:
+						array3D[curCount][currentY][currentZ].textured = true;
+						array3D[curCount][currentY][currentZ].textureRef = 4;
+						break;
+					case DIRT:
+						array3D[curCount][currentY][currentZ].textured = true;
+						array3D[curCount][currentY][currentZ].textureRef = 2;
+						break;
+					case LOGS:
+						array3D[curCount][currentY][currentZ].textured = true;
+						array3D[curCount][currentY][currentZ].textureRef = 7;
+						break;
+					case LEAVES:
+						array3D[curCount][currentY][currentZ].textured = true;
+						array3D[curCount][currentY][currentZ].textureRef = 8;
+						break;
+					case TREE:
+						array3D[curCount][currentY][currentZ].textured = true;
+						array3D[curCount][currentY][currentZ].textureRef = 7;
+						break;
+				}
+				curCount++;
+				ct++;
+			}
+			results = strtok(NULL, ",");
+
 			
 		}
+		updateVisibility();
 		
-		
-		
-		
+		/*
 	} else if(s.substr(0, 4) == "del:"){			//<([-]?[0-9]*):([-]?[0-9]*):([-]?[0-9]*)>
 	} else if(s.substr(0, 4) == "add:"){			//<([0-9]*)><([-]?[0-9]*):([-]?[0-9]*):([-]?[0-9]*)>
 	} else if(s.substr(0, 7) == "player:"){			//<([0-9]*)><([-]?[0-9\\.]*):([-]?[0-9\\.]*):([-]?[0-9\\.]*)>
@@ -609,39 +606,53 @@ void testApp::processShit(const string& s){
 		
 	} else if(s.substr(0, 9) == "starting:"){		//<([-]?[0-9]*)><([-]?[0-9]*)><([-]?[0-9]*)><([-]?[0-9]*)><([-]?[0-9]*)><([-]?[0-9]*)>
 		
-		
+		*/
 		
 		
 	}
-	
+//	delete cstr;
+//	delete results;
 }
 
 //void testApp::resizeArray(int wx, int wy, int wz){
 
-bool testApp::testVisibility(int x, int y, int z){
-	if(x <= 0 || x >= mapWidth - 1 ||  y >= mapHeight - 1 || z <= 0 || z >= mapDepth - 1){
-		return true;
-	} else if(y <= 0){
-		return false;
-	} else {
-		BlockType blockTypes[2] = {NONE, SNOW};
-		for(int i = 0; i < 2; i++){
-			
-			
-			if(array3D[x - 1][y][z].type == blockTypes[i] || array3D[x + 1][y][z].type  == blockTypes[i]){
-				return true;
+void testApp::updateVisibility(){
+
+	for(int x=0; x < mapWidth; x++){
+		for(int y=0; y < mapHeight; y++){
+			for(int z=0; z < mapDepth; z++){
+				Block* block = &array3D[x][y][z];
+				
+				if(x <= 0 || x >= mapWidth - 1 ||  y >= mapHeight - 1 || z <= 0 || z >= mapDepth - 1){
+					block->visMask = 63;
+				} else if(y <= 0){
+					block->visMask = 0;
+				} else {
+					block->visMask = 0;
+					BlockType blockTypes[2] = {NONE, SNOW};
+					for(int i = 0; i < 2; i++){
+						
+						
+						if(array3D[x - 1][y][z].type == blockTypes[i]){
+							block->visMask |= VIS_FRONT;
+							
+						} else if(array3D[x + 1][y][z].type  == blockTypes[i]){
+							block->visMask |= VIS_BACK;				
+						} else if(array3D[x][y - 1][z].type == blockTypes[i] ){
+							block->visMask |= VIS_BOTTOM;				
+						} else if (array3D[x][y + 1][z].type == blockTypes[i]){
+							block->visMask |= VIS_TOP;				
+							
+						} else if(array3D[x][y][z - 1].type == blockTypes[i] ){
+							block->visMask |= VIS_LEFT;				
+						} else if (array3D[x][y][z + 1].type == blockTypes[i]){
+							block->visMask |= VIS_RIGHT;				
+						}
+					}
+				}
 			}
-			if(array3D[x][y - 1][z].type == blockTypes[i] || array3D[x][y + 1][z].type == blockTypes[i]){
-				return true;
-			}
-			if(array3D[x][y][z - 1].type == blockTypes[i] || array3D[x][y][z + 1].type == blockTypes[i]){
-				return true;
-			}
-		}
+		}																	  
 	}
-	return false;
-	
-	
 }
 
 //FBO config

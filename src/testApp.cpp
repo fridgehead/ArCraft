@@ -126,15 +126,32 @@ void testApp::setup(){
 			for(int z=0; z < mapDepth; z++){
 				b.type = NONE;
 				b.textured = false;
-				b.visMask = 63;
+				b.visMask = VIS_TOP;
 				array3D[x][y][z] = b;
 			}
 		}
 	}
-	b.type = GRASS;
-	b.textured = true;
-	b.textureRef = 0;
+	
+
+		b.type = GRASS;
+		b.textured = true;
+		b.textureRef = 0;
+		b.visMask = VIS_TOP;
+		array3D[1][5][5] = b;
+	
+	b.visMask = VIS_BOTTOM;
+	array3D[2][5][5] = b;
+	b.visMask = VIS_LEFT;
+	array3D[3][5][5] = b;
+	b.visMask = VIS_RIGHT;
+	array3D[4][5][5] = b;
+	b.visMask = VIS_FRONT;
 	array3D[5][5][5] = b;
+	b.visMask = VIS_BACK;
+	array3D[6][5][5] = b;
+	
+	
+	
 	rotXAmt = 0;
 	rotYAmt = 0;
 	
@@ -258,7 +275,7 @@ void testApp::drawBlock(int x, int y, int z, int wx, int wy, int wz, Block *bTyp
 	
 	
 	glBegin(GL_QUADS);
-	if(bType->visMask && VIS_TOP){
+	if(bType->visMask & VIS_TOP){
 		/*      This is the top face*/
 		glTexCoord2f(0.0,0.0); 	glVertex3f(0.0f, 0.0f, 0.0f);
 		glTexCoord2f(0.0,1.0);	glVertex3f(0.0f, 0.0f, -1.0f);
@@ -266,7 +283,7 @@ void testApp::drawBlock(int x, int y, int z, int wx, int wy, int wz, Block *bTyp
 		glTexCoord2f(1.0,0.0);	glVertex3f(-1.0f, 0.0f, 0.0f);
 	}
 	
-	if(bType->visMask && VIS_FRONT){
+	if(bType->visMask & VIS_FRONT){
 		/*      This is the front face*/
 		glTexCoord2f(0.0,0.0);	glVertex3f(0.0f, 0.0f, 0.0f);
 		glTexCoord2f(0.0,1.0);	glVertex3f(-1.0f, 0.0f, 0.0f);
@@ -274,30 +291,30 @@ void testApp::drawBlock(int x, int y, int z, int wx, int wy, int wz, Block *bTyp
 		glTexCoord2f(1.0,0.0);	glVertex3f(0.0f, -1.0f, 0.0f);
 	}
 	
-	if(bType->visMask && VIS_RIGHT){
+	if(bType->visMask & VIS_RIGHT){
 		/*      This is the right face*/
 		glTexCoord2f(0.0,0.0);	glVertex3f(0.0f, 0.0f, 0.0f);
 		glTexCoord2f(0.0,1.0);	glVertex3f(0.0f, -1.0f, 0.0f);
 		glTexCoord2f(1.0,1.0);	glVertex3f(0.0f, -1.0f, -1.0f);
 		glTexCoord2f(1.0,0.0);	glVertex3f(0.0f, 0.0f, -1.0f);
 	}
-	if(bType->visMask && VIS_LEFT){
+	if(bType->visMask & VIS_LEFT){
 		/*      This is the left face*/
 		glTexCoord2f(0.0,0.0);	glVertex3f(-1.0f, 0.0f, 0.0f);
 		glTexCoord2f(0.0,1.0);	glVertex3f(-1.0f, 0.0f, -1.0f);
 		glTexCoord2f(1.0,1.0);	glVertex3f(-1.0f, -1.0f, -1.0f);
 		glTexCoord2f(1.0,0.0);	glVertex3f(-1.0f, -1.0f, 0.0f);
 	}
-	if(bType->visMask && VIS_BOTTOM){
+	if(bType->visMask & VIS_BOTTOM){
 		/*      This is the bottom face*/
-		glTexCoord2f(0.0,0.0);	glVertex3f(0.0f, 0.0f, 0.0f);
+		glTexCoord2f(0.0,0.0);	glVertex3f(0.0f, -1.0f, 0.0f);
 		glTexCoord2f(0.0,1.0);	glVertex3f(0.0f, -1.0f, -1.0f);
 		glTexCoord2f(1.0,1.0);	glVertex3f(-1.0f, -1.0f, -1.0f);
 		glTexCoord2f(1.0,0.0);	glVertex3f(-1.0f, -1.0f, 0.0f);
 	}
-	if(bType->visMask && VIS_BACK){
+	if(bType->visMask & VIS_BACK){
 		/*      This is the back face*/
-		glTexCoord2f(0.0,0.0);	glVertex3f(0.0f, 0.0f, 0.0f);
+		glTexCoord2f(0.0,0.0);	glVertex3f(0.0f, 0.0f, -1.0f);
 		glTexCoord2f(0.0,1.0);	glVertex3f(-1.0f, 0.0f, -1.0f);
 		glTexCoord2f(1.0,1.0);	glVertex3f(-1.0f, -1.0f, -1.0f);
 		glTexCoord2f(1.0,0.0);	glVertex3f(0.0f, -1.0f, -1.0f);
@@ -634,19 +651,19 @@ void testApp::updateVisibility(){
 						
 						
 						if(array3D[x - 1][y][z].type == blockTypes[i]){
-							block->visMask |= VIS_FRONT;
+							block->visMask |= VIS_LEFT;
 							
 						} else if(array3D[x + 1][y][z].type  == blockTypes[i]){
-							block->visMask |= VIS_BACK;				
+							block->visMask |= VIS_RIGHT;				
 						} else if(array3D[x][y - 1][z].type == blockTypes[i] ){
 							block->visMask |= VIS_BOTTOM;				
 						} else if (array3D[x][y + 1][z].type == blockTypes[i]){
 							block->visMask |= VIS_TOP;				
 							
 						} else if(array3D[x][y][z - 1].type == blockTypes[i] ){
-							block->visMask |= VIS_LEFT;				
+							block->visMask |= VIS_BACK;				
 						} else if (array3D[x][y][z + 1].type == blockTypes[i]){
-							block->visMask |= VIS_RIGHT;				
+							block->visMask |= VIS_FRONT;				
 						}
 					}
 				}

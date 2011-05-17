@@ -105,9 +105,9 @@ void testApp::setup(){
 	textures[8].loadImage("leaves.png");
 	
 	
-	mapWidth = 20;
+	mapWidth = 40;
 	mapHeight = 20;
-	mapDepth = 20;
+	mapDepth = 40;
 	mapLocked = false;
 	
 	//fill our 3d vector with 20x20x20
@@ -139,17 +139,13 @@ void testApp::setup(){
 		b.visMask = VIS_TOP;
 		array3D[1][5][5] = b;
 	
-	b.visMask = VIS_BOTTOM;
-	array3D[2][5][5] = b;
-	b.visMask = VIS_LEFT;
-	array3D[3][5][5] = b;
-	b.visMask = VIS_RIGHT;
-	array3D[4][5][5] = b;
-	b.visMask = VIS_FRONT;
-	array3D[5][5][5] = b;
-	b.visMask = VIS_BACK;
-	array3D[6][5][5] = b;
 	
+	array3D[2][5][5] = b;
+	array3D[3][5][5] = b;
+	array3D[4][6][5] = b;
+	array3D[5][5][5] = b;
+	array3D[6][5][5] = b;
+	updateVisibility();
 	
 	
 	rotXAmt = 0;
@@ -158,7 +154,7 @@ void testApp::setup(){
 	//fbo.allocate(640,480, GL_RGBA, 1);
 	
 	
-	guiDraw = true;
+	guiDraw = false;
 	mapScale = 1.0f;
 	offset.x = -100.0f;
 	offset.y = 100.0f;
@@ -283,7 +279,7 @@ void testApp::drawBlock(int x, int y, int z, int wx, int wy, int wz, Block *bTyp
 		glTexCoord2f(1.0,0.0);	glVertex3f(-1.0f, 0.0f, 0.0f);
 	}
 	
-	if(bType->visMask & VIS_FRONT){
+	if(bType->visMask & VIS_FRONT){		
 		/*      This is the front face*/
 		glTexCoord2f(0.0,0.0);	glVertex3f(0.0f, 0.0f, 0.0f);
 		glTexCoord2f(0.0,1.0);	glVertex3f(-1.0f, 0.0f, 0.0f);
@@ -612,7 +608,6 @@ void testApp::processShit(const string& s){
 
 			
 		}
-		updateVisibility();
 		
 		/*
 	} else if(s.substr(0, 4) == "del:"){			//<([-]?[0-9]*):([-]?[0-9]*):([-]?[0-9]*)>
@@ -624,7 +619,8 @@ void testApp::processShit(const string& s){
 	} else if(s.substr(0, 9) == "starting:"){		//<([-]?[0-9]*)><([-]?[0-9]*)><([-]?[0-9]*)><([-]?[0-9]*)><([-]?[0-9]*)><([-]?[0-9]*)>
 		
 		*/
-		
+		updateVisibility();
+
 		
 	}
 //	delete cstr;
@@ -639,33 +635,40 @@ void testApp::updateVisibility(){
 		for(int y=0; y < mapHeight; y++){
 			for(int z=0; z < mapDepth; z++){
 				Block* block = &array3D[x][y][z];
-				
+				int vmask = 0;
 				if(x <= 0 || x >= mapWidth - 1 ||  y >= mapHeight - 1 || z <= 0 || z >= mapDepth - 1){
 					block->visMask = 63;
 				} else if(y <= 0){
 					block->visMask = 0;
 				} else {
-					block->visMask = 0;
+					vmask = 0;
 					BlockType blockTypes[2] = {NONE, SNOW};
 					for(int i = 0; i < 2; i++){
 						
 						
 						if(array3D[x - 1][y][z].type == blockTypes[i]){
-							block->visMask |= VIS_LEFT;
+							vmask |= VIS_LEFT;							
+						} 
+						if(array3D[x + 1][y][z].type  == blockTypes[i]){
+							vmask |= VIS_RIGHT;				
 							
-						} else if(array3D[x + 1][y][z].type  == blockTypes[i]){
-							block->visMask |= VIS_RIGHT;				
-						} else if(array3D[x][y - 1][z].type == blockTypes[i] ){
-							block->visMask |= VIS_BOTTOM;				
-						} else if (array3D[x][y + 1][z].type == blockTypes[i]){
-							block->visMask |= VIS_TOP;				
+						} 
+						if(array3D[x][y - 1][z].type == blockTypes[i] ){
+							vmask |= VIS_BOTTOM;				
+						} 
+						if (array3D[x][y + 1][z].type == blockTypes[i]){
+							vmask |= VIS_TOP;				
 							
-						} else if(array3D[x][y][z - 1].type == blockTypes[i] ){
-							block->visMask |= VIS_BACK;				
-						} else if (array3D[x][y][z + 1].type == blockTypes[i]){
-							block->visMask |= VIS_FRONT;				
+						} 
+						if(array3D[x][y][z - 1].type == blockTypes[i] ){
+							vmask |= VIS_BACK;				
+						}
+						if (array3D[x][y][z + 1].type == blockTypes[i]){
+							vmask |= VIS_FRONT;				
 						}
 					}
+					block->visMask = vmask;
+					
 				}
 			}
 		}																	  

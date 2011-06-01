@@ -88,7 +88,7 @@ public:
 	
 	//syphon test
 	ofxSyphonServer mainOutputSyphonServer;
-
+	ofTextureData thisWillNeverWork;
 	
 	
 	//map data
@@ -144,7 +144,7 @@ public:
 	//tracking stuff
 	//ARToolKitPlus::TrackerSingleMarker *tracker;
 	ofColor sceneWhiteLevel;
-
+	int lastTextureRef;
 	
 };
 

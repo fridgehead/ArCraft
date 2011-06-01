@@ -335,11 +335,16 @@ void testApp::draw(){
 	glClearDepth(1.0);
 	glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glEnable(GL_TEXTURE_2D);
-	
 	glPushMatrix();
+	bindFbo();
+	glDisable(GL_DEPTH_TEST);
+	
+	kinectImage.draw(0, 0);
+	glEnable (GL_DEPTH_TEST);
+	
 	
 	if(bDraw){
-		bindFbo();
+		//bindFbo();
 		glMatrixMode( GL_PROJECTION );
 		glPushMatrix();
 		glLoadMatrixf(tracker->getProjectionMatrix());
@@ -394,21 +399,22 @@ void testApp::draw(){
 		glPopMatrix();
 		glMatrixMode( GL_MODELVIEW );		
 		glPopMatrix();
-		unbindFbo();
+		//unbindFbo();
 		
 	}
+	unbindFbo();
 	glPopMatrix();
 	
 	glDisable (GL_DEPTH_TEST);
 	ofEnableAlphaBlending();
-	kinectImage.draw(0, 0);	
+	//kinectImage.draw(0, 0);	
 	
-	if(bDraw){
-		ofSetColor(sceneWhiteLevel);
+	//if(bDraw){
+		//ofSetColor(sceneWhiteLevel);
 		drawFbo();
-		ofSetColor(255,255,255);
+		//ofSetColor(255,255,255);
 				
-	}	
+	//}	
 	if(guiDraw){
 		
 		kinectDepthImage.draw(0,0,160,120);	
@@ -442,7 +448,8 @@ void testApp::draw(){
 	finalMaskImage.setFromPixels(finalBuf, 640, 480);
 
 #endif
-	mainOutputSyphonServer.publishScreen();
+	mainOutputSyphonServer.publishFail(&thisWillNeverWork);
+	
 	
 }
 
@@ -773,6 +780,14 @@ void testApp::initFrameBuffer() {
 	}
 	
 	glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0); // Unbind our frame buffer  
+	
+	thisWillNeverWork.bAllocated = true;
+	thisWillNeverWork.textureID = mTextureID;
+	thisWillNeverWork.width = 640;
+	thisWillNeverWork.height = 480;
+	thisWillNeverWork.bFlipTexture = true;
+	thisWillNeverWork.textureTarget = GL_TEXTURE_2D;
+	
 }  
 
 

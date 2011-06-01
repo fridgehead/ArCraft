@@ -62,8 +62,8 @@ void testApp::setup(){
 	tracker = new ARToolKitPlus::TrackerMultiMarkerImpl<6,6,6, 1, 8>(width,height);
 	
 	tracker->setPixelFormat(ARToolKitPlus::PIXEL_FORMAT_LUM);	
-	
-    if( !tracker->init( (const char *)ofToDataPath("LogitechPro4000.dat").c_str(), (const char *)ofToDataPath("markerboard_480-499.cfg").c_str(), 1.0f, 1000.0f) )            // load std. ARToolKit camera file
+	//markerboard_480-499.cfg
+    if( !tracker->init( (const char *)ofToDataPath("LogitechPro4000.dat").c_str(), (const char *)ofToDataPath("conf.cfg").c_str(), 1.0f, 1000.0f) )            // load std. ARToolKit camera file
 	{
 		printf("ERROR: init() failed\n");
 		delete tracker;
@@ -105,9 +105,9 @@ void testApp::setup(){
 	textures[8].loadImage("leaves.png");
 	
 	
-	mapWidth = 40;
+	mapWidth = 20;
 	mapHeight = 20;
-	mapDepth = 40;
+	mapDepth = 20;
 	mapLocked = false;
 	
 	//fill our 3d vector with 20x20x20

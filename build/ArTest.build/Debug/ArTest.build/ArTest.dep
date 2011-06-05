@@ -1,10 +1,10 @@
-d9be68bda17a715812cf348c5ec0d350 432f58ab517c4a314c4478e5dee4b8ce ffffffffffffffffffffffffffffffff 102 /Users/tomwyatt/dev/cpp/apps/ArTest/bin/ArTest.app
-a606c502b157693f51e7883dd3b19746 1952ed7be848de9a0b6f0199afb990af ffffffffffffffffffffffffffffffff 4259952 /Users/tomwyatt/dev/cpp/apps/ArTest/bin/ArTest.app/Contents/MacOS/ArTest
-c1dd3867fed25cc58dc2bc727912f180 656b08bc110956d56c0a216c52f505be ffffffffffffffffffffffffffffffff 1379312 /Users/tomwyatt/dev/cpp/apps/ArTest/build/ArTest.build/Debug/ArTest.build/Objects-normal/i386/testApp.o
+d9be68bda17a0bf012cf348c5ec0d37b 432f58ab517c4a314c4478e5dee4b8ce ffffffffffffffffffffffffffffffff 102 /Users/tomwyatt/dev/cpp/apps/ArTest/bin/ArTest.app
+a606c502b157139751e7883dd3b1976d 1952ed7be848de9a0b6f0199afb990af ffffffffffffffffffffffffffffffff 4259952 /Users/tomwyatt/dev/cpp/apps/ArTest/bin/ArTest.app/Contents/MacOS/ArTest
+c1dd3867fef268d58dc2bc727912f1ab 656b08bc110956d56c0a216c52f505be ffffffffffffffffffffffffffffffff 1379112 /Users/tomwyatt/dev/cpp/apps/ArTest/build/ArTest.build/Debug/ArTest.build/Objects-normal/i386/testApp.o
 c35d21ce5d3f55b2d63f9aeb21a5975e a184db23d4fe2a66017b48ef16d4a7ba ffffffffffffffffffffffffffffffff 378452 /Users/tomwyatt/dev/cpp/apps/ArTest/build/ArTest.build/Debug/ArTest.build/Objects-normal/i386/ofxSyphonServer.o
 c35d21ce1dd43260d63f9aeb21a5ab1b a57d5485c816eab8ad3e4c445745581e ffffffffffffffffffffffffffffffff 379328 /Users/tomwyatt/dev/cpp/apps/ArTest/build/ArTest.build/Debug/ArTest.build/Objects-normal/i386/ofxSyphonClient.o
 5d82f6d157282b4ca75979f2234a112f 12e99ee5a3bf6ac57b20c34446e27eed ffffffffffffffffffffffffffffffff 22916 /Users/tomwyatt/dev/cpp/apps/ArTest/build/ArTest.build/Debug/ArTest.build/Objects-normal/i386/SyphonNameboundClient.o
-c1dd3867b53379ab8dc2bc727911bb0d a0762094cb4fc0b7288a0bd6c00e101a ffffffffffffffffffffffffffffffff 527452 /Users/tomwyatt/dev/cpp/apps/ArTest/build/ArTest.build/Debug/ArTest.build/Objects-normal/i386/NetworkThread.o
+c1dd3867b5337b3e8dc2bc727911bb0d a0762094cb4fc0b7288a0bd6c00e101a ffffffffffffffffffffffffffffffff 527452 /Users/tomwyatt/dev/cpp/apps/ArTest/build/ArTest.build/Debug/ArTest.build/Objects-normal/i386/NetworkThread.o
 c1dd3867ffd0186f8dc2bc727919e918 4252f2519f267bf8584d0839f2446af2 ffffffffffffffffffffffffffffffff 514064 /Users/tomwyatt/dev/cpp/apps/ArTest/build/ArTest.build/Debug/ArTest.build/Objects-normal/i386/ofxUserGenerator.o
 c1dd3867b2e8f73d8dc2bc72791bb054 33229f6ad99ac2d4cb2719c623f67728 ffffffffffffffffffffffffffffffff 457092 /Users/tomwyatt/dev/cpp/apps/ArTest/build/ArTest.build/Debug/ArTest.build/Objects-normal/i386/ofxTrackedUser.o
 c1dd3867b2c9a8cb8dc2bc72791345ce 0ceb6bf0fb28076cb6bcfb0d3b7dfe31 ffffffffffffffffffffffffffffffff 449808 /Users/tomwyatt/dev/cpp/apps/ArTest/build/ArTest.build/Debug/ArTest.build/Objects-normal/i386/ofxOpenNIRecorder.o

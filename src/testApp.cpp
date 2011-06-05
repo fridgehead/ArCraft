@@ -211,6 +211,8 @@ void testApp::setup(){
 	glLightModeli(GL_LIGHT_MODEL_TWO_SIDE,0);  //sets lighting to one-sided
 	glLightfv(GL_LIGHT0, GL_POSITION, light0.pos);
 	
+	glEnable(GL_CULL_FACE);
+	
 }
 
 
@@ -386,11 +388,10 @@ void testApp::draw(){
 		for(int x=0; x < mapWidth; x++){
 			for(int y=0; y < mapHeight; y++){
 				for(int z=0; z < mapDepth; z++){
-					Block b = array3D[x][y][z];
-					if(b.type != NONE && b.visMask != 0){
+					Block* b = &array3D[x][y][z];
+					if(b->type != NONE && b->visMask != 0){				
 						
-						
-						drawBlock(x * 10,y * 10,z * 10, 10, 10,10, &b);
+						drawBlock(x * 10,y * 10,z * 10, 10, 10,10, b);
 					}
 				}
 			}

@@ -294,58 +294,28 @@ void testApp::drawBlock(int x, int y, int z, int wx, int wy, int wz, Block *bTyp
 	glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, mcolor);
 	glMaterialfv(GL_FRONT, GL_SHININESS, mcolor);
 	glFrontFace(GL_CW);
+	
 	if(bType->textured){
 		textures[bType->textureRef].bind();
 	}
 
 	glBegin(GL_QUADS);
-	if(bType->visMask & VIS_TOP){
-		/*      This is the top face*/
-		ofxVec3f verts[4];
-		for (int i = 0; i < 4; i++){
-			verts[i] = vList[ bType->faceList[0][i] ];
+	
+	for (int f = 0; f < 6; f++){
+		int visFace = 1 << f;
+		if(bType->visMask & visFace){
+			/*      This is the top face*/
+			ofxVec3f verts[4];
+			for (int i = 0; i < 4; i++){
+				verts[i] = vList[ bType->faceList[f][i] ];
+			}
+			ofxVec3f norm = bType->normals[f];
+			glNormal3f(norm.x, norm.y, norm.z);
+			glTexCoord2f(0.0,0.0); 	glVertex3f(verts[0].x, verts[0].y, verts[0].z);
+			glTexCoord2f(0.0,1.0);	glVertex3f(verts[1].x, verts[1].y, verts[1].z);
+			glTexCoord2f(1.0,1.0);	glVertex3f(verts[2].x, verts[2].y, verts[2].z);
+			glTexCoord2f(1.0,0.0);	glVertex3f(verts[3].x, verts[3].y, verts[3].z);
 		}
-		glTexCoord2f(0.0,0.0); 	glVertex3f(verts[0].x, verts[0].y, verts[0].z);
-		glTexCoord2f(0.0,1.0);	glVertex3f(verts[1].x, verts[1].y, verts[1].z);
-		glTexCoord2f(1.0,1.0);	glVertex3f(verts[2].x, verts[2].y, verts[2].z);
-		glTexCoord2f(1.0,0.0);	glVertex3f(verts[3].x, verts[3].y, verts[3].z);
-	}
-	
-	if(bType->visMask & VIS_FRONT){		
-		/*      This is the front face*/
-		glTexCoord2f(0.0,0.0);	glVertex3f(0.0f, 0.0f, 0.0f);
-		glTexCoord2f(0.0,1.0);	glVertex3f(-1.0f, 0.0f, 0.0f);
-		glTexCoord2f(1.0,1.0);	glVertex3f(-1.0f, -1.0f, 0.0f);
-		glTexCoord2f(1.0,0.0);	glVertex3f(0.0f, -1.0f, 0.0f);
-	}
-	
-	if(bType->visMask & VIS_RIGHT){
-		/*      This is the right face*/
-		glTexCoord2f(0.0,0.0);	glVertex3f(0.0f, 0.0f, 0.0f);
-		glTexCoord2f(0.0,1.0);	glVertex3f(0.0f, -1.0f, 0.0f);
-		glTexCoord2f(1.0,1.0);	glVertex3f(0.0f, -1.0f, -1.0f);
-		glTexCoord2f(1.0,0.0);	glVertex3f(0.0f, 0.0f, -1.0f);
-	}
-	if(bType->visMask & VIS_LEFT){
-		/*      This is the left face*/
-		glTexCoord2f(0.0,0.0);	glVertex3f(-1.0f, 0.0f, 0.0f);
-		glTexCoord2f(0.0,1.0);	glVertex3f(-1.0f, 0.0f, -1.0f);
-		glTexCoord2f(1.0,1.0);	glVertex3f(-1.0f, -1.0f, -1.0f);
-		glTexCoord2f(1.0,0.0);	glVertex3f(-1.0f, -1.0f, 0.0f);
-	}
-	if(bType->visMask & VIS_BOTTOM){
-		/*      This is the bottom face*/
-		glTexCoord2f(0.0,0.0);	glVertex3f(0.0f, -1.0f, 0.0f);
-		glTexCoord2f(0.0,1.0);	glVertex3f(0.0f, -1.0f, -1.0f);
-		glTexCoord2f(1.0,1.0);	glVertex3f(-1.0f, -1.0f, -1.0f);
-		glTexCoord2f(1.0,0.0);	glVertex3f(-1.0f, -1.0f, 0.0f);
-	}
-	if(bType->visMask & VIS_BACK){
-		/*      This is the back face*/
-		glTexCoord2f(0.0,0.0);	glVertex3f(0.0f, 0.0f, -1.0f);
-		glTexCoord2f(0.0,1.0);	glVertex3f(-1.0f, 0.0f, -1.0f);
-		glTexCoord2f(1.0,1.0);	glVertex3f(-1.0f, -1.0f, -1.0f);
-		glTexCoord2f(1.0,0.0);	glVertex3f(0.0f, -1.0f, -1.0f);
 	}
 	glEnd();
 	if(bType->textured){

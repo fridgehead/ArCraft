@@ -39,11 +39,11 @@ struct light
 };
 
 #define VIS_TOP 1
-#define VIS_BOTTOM 2
-#define VIS_LEFT 4
-#define VIS_RIGHT 8
-#define VIS_BACK 16
-#define VIS_FRONT 32
+#define VIS_FRONT 2
+#define VIS_RIGHT 4
+#define VIS_LEFT 8
+#define VIS_BOTTOM 16
+#define VIS_BACK 32
 
 struct Player {
 	int entityId;

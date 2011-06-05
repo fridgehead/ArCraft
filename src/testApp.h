@@ -25,7 +25,17 @@ struct Block {
 	int textureRef;
 	bool textured;
 	int visMask;
-	
+	ofxVec3f vertices[8];	//vertex data for the cube
+	int faceList[6][4];		//list of faces and their vertices
+	ofxVec3f normals[6];	//normal vectors for faces
+};
+
+struct light
+{
+	float pos[4];
+	float diffuse[4];
+	float specular[4];
+	float ambient[4];
 };
 
 #define VIS_TOP 1
@@ -64,6 +74,8 @@ public:
 	void processShit(const string& str);
 	void updateVisibility();
 	
+	void doLights();
+	
 	/** Fbo init and stuff */
 	void initFrameBufferTexture();
 	void initFrameBufferDepthBuffer();
@@ -72,6 +84,8 @@ public:
 	void bindFbo();
 	void unbindFbo();
 	void drawFbo();
+	
+	void calculateNormal(Block* b, int faceId);
 	
 	GLuint mDepthID;
 	GLuint mFBOID;
@@ -145,6 +159,9 @@ public:
 	//ARToolKitPlus::TrackerSingleMarker *tracker;
 	ofColor sceneWhiteLevel;
 	int lastTextureRef;
+	
+	//lighting
+	light light0;
 	
 };
 

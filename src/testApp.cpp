@@ -63,7 +63,7 @@ void testApp::setup(){
 	
 	tracker->setPixelFormat(ARToolKitPlus::PIXEL_FORMAT_LUM);	
 	//markerboard_480-499.cfg
-    if( !tracker->init( (const char *)ofToDataPath("LogitechPro4000.dat").c_str(), (const char *)ofToDataPath("conf.cfg").c_str(), 1.0f, 1000.0f) )            // load std. ARToolKit camera file
+    if( !tracker->init( (const char *)ofToDataPath("LogitechPro4000.dat").c_str(), (const char *)ofToDataPath("small.cfg").c_str(), 1.0f, 1000.0f) )            // load std. ARToolKit camera file
 	{
 		printf("ERROR: init() failed\n");
 		delete tracker;
@@ -105,9 +105,9 @@ void testApp::setup(){
 	textures[8].loadImage("leaves.png");
 	
 	
-	mapWidth = 20;
+	mapWidth = 40;
 	mapHeight = 20;
-	mapDepth = 20;
+	mapDepth = 40;
 	mapLocked = false;
 	
 	//fill our 3d vector with 20x20x20
@@ -121,13 +121,27 @@ void testApp::setup(){
 	}
 	Block b;
 	
+	ofxVec3f vList[6];
+	vList[0] = ofxVec3f(0.0f, 0.0f, -1.0f);
+	vList[1] = ofxVec3f(-1.0f, 0.0f, -1.0f);
+	vList[2] = ofxVec3f(-1.0f, 0.0f, 0.0f);
+	vList[3] = ofxVec3f(0.0f, 0.0f, 0.0f);
+	vList[4] = ofxVec3f(-1.0f, -1.0f, 0.0f);
+	vList[5] = ofxVec3f(0.0f, -1.0f, 0.0f);
+	vList[6] = ofxVec3f(0.0f, -1.0f, -1.0f);
+	vList[7] = ofxVec3f(-1.0f, -1.0f, -1.0f);
+	
 	for(int x=0; x < mapWidth; x++){
 		for(int y=0; y < mapHeight; y++){
 			for(int z=0; z < mapDepth; z++){
 				b.type = NONE;
 				b.textured = false;
 				b.visMask = VIS_TOP;
-				array3D[x][y][z] = b;
+				
+				
+				
+				array3D[x][y][z] = b;		
+				
 			}
 		}
 	}
@@ -166,6 +180,21 @@ void testApp::setup(){
 	
 	
 	ofSetFrameRate(60);
+	
+	light light = {
+		{0,0,0,1},  //position (the final 1 means the light is positional)
+		{1,1,1,1},    //diffuse
+		{0,0,0,1},    //specular
+		{0,0,0,1}     //ambient
+    };
+	
+	light0 = light;
+	
+	glEnable(GL_LIGHTING);
+	glEnable(GL_LIGHT0);
+	glLightModeli(GL_LIGHT_MODEL_TWO_SIDE,0);  //sets lighting to one-sided
+	glLightfv(GL_LIGHT0, GL_POSITION, light0.pos);
+	
 }
 
 
@@ -234,25 +263,7 @@ void testApp::update(){
 		bDraw = true;
 	}else bDraw = false;
 		
-	/*
-	
-	char udpMessage[100000];
-	udpConnectionRx.Receive(udpMessage,100000);
-	string s;
-	s.assign(udpMessage);
-	trim(s);
-	if(s != ""){
-		//cout<<"udpMessage-"<<s<<"-"<<endl;
 		
-		//process this shit
-		processShit(s);
-		
-	}*/
-	
-	rotX += rotXAmt;
-	rotY += rotYAmt;
-	
-	
 	
 	
 }
@@ -262,17 +273,19 @@ void testApp::drawBlock(int x, int y, int z, int wx, int wy, int wz, Block *bTyp
 	glPushMatrix();
 	glTranslatef(x,y,z);
 	glScalef(wx,wy,wz);
-	//Block block = *bType;
+	float mcolor[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+	//hmmmmm
+	glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, mcolor);
+	glMaterialfv(GL_FRONT, GL_SHININESS, mcolor);
+	glFrontFace(GL_CW);
 	if(bType->textured){
 		textures[bType->textureRef].bind();
 	}
-	//grassImage.getTextureReference().bind();
-	
-	
-	
+
 	glBegin(GL_QUADS);
 	if(bType->visMask & VIS_TOP){
 		/*      This is the top face*/
+		
 		glTexCoord2f(0.0,0.0); 	glVertex3f(0.0f, 0.0f, 0.0f);
 		glTexCoord2f(0.0,1.0);	glVertex3f(0.0f, 0.0f, -1.0f);
 		glTexCoord2f(1.0,1.0);	glVertex3f(-1.0f, 0.0f, -1.0f);
@@ -342,7 +355,6 @@ void testApp::draw(){
 	kinectImage.draw(0, 0);
 	glEnable (GL_DEPTH_TEST);
 	
-	
 	if(bDraw){
 		//bindFbo();
 		glMatrixMode( GL_PROJECTION );
@@ -352,7 +364,9 @@ void testApp::draw(){
 		glPushMatrix();
 		glLoadMatrixf(tracker->getModelViewMatrix());
 				
+
 		
+		doLights();		
 
 		glTranslatef(offset.x,offset.y,0);
 		glRotatef(90, 1, 0, 0);
@@ -405,6 +419,7 @@ void testApp::draw(){
 	unbindFbo();
 	glPopMatrix();
 	
+    glDisable(GL_LIGHTING);
 	glDisable (GL_DEPTH_TEST);
 	ofEnableAlphaBlending();
 	//kinectImage.draw(0, 0);	
@@ -453,6 +468,13 @@ void testApp::draw(){
 	
 }
 
+void testApp::doLights(){	
+	glLightfv(GL_LIGHT0, GL_DIFFUSE, light0.diffuse);
+	glLightfv(GL_LIGHT0, GL_AMBIENT, light0.ambient);
+    glLightfv(GL_LIGHT0, GL_SPECULAR, light0.specular);
+	glLightfv(GL_LIGHT0, GL_POSITION, light0.pos);
+}
+
 
 //--------------------------------------------------------------
 void testApp::keyPressed(int key){
@@ -476,8 +498,10 @@ void testApp::mouseMoved(int x, int y ){
 	mx = x;
 	my = y;
 	
-	//offset.x = -mx;
-	//offset.y = my;
+	light0.pos[0] = -mx;
+	light0.pos[1] =  my;
+	light0.pos[2] = 0;
+	
 }
 
 //--------------------------------------------------------------
@@ -498,7 +522,7 @@ void testApp::mousePressed(int x, int y, int button){
 	unsigned char g = pix[x + y * 640 + 1];
 	unsigned char b = pix[x + y * 640 + 2];
 	
-	cout << "r: " << r << " g: " << g << " b: " << b << endl;
+	cout << "r: " << (int)r << " g: " << (int)g << " b: " << (int)b << endl;
 	sceneWhiteLevel = ofColor(r,g,b);
 	
 	
@@ -567,45 +591,48 @@ void testApp::processShit(const string& s){
 				int type = atoi(results);
 				//cout << "type: " << type << "," << endl;
 				//	cout << "added block id: " << type << " at x: " << curCount << " " << currentY << " " << currentZ << endl;
-				array3D[curCount][currentY][currentZ].type = (BlockType)type;
-				array3D[curCount][currentY][currentZ].textured = false;						
+				Block* b = &array3D[curCount][currentY][currentZ];
+				b->type = (BlockType)type;
+				b->textured = false;
+				//b->type = (BlockType)type;
+				//b->textured = false;						
 				
 				switch ((BlockType)type ){
 					case GRASS:
-						array3D[curCount][currentY][currentZ].textured = true;						
-						array3D[curCount][currentY][currentZ].textureRef = 0;
+						b->textured = true;						
+						b->textureRef = 0;
 						break;
 					case COBBLE:
-						array3D[curCount][currentY][currentZ].textured = true;
-						array3D[curCount][currentY][currentZ].textureRef = 1;
+						b->textured = true;
+						b->textureRef = 1;
 						break;
 					case LAVA:
-						array3D[curCount][currentY][currentZ].textured = true;
-						array3D[curCount][currentY][currentZ].textureRef = 3;
+						b->textured = true;
+						b->textureRef = 3;
 						break;
 					case LAVA2:
-						array3D[curCount][currentY][currentZ].textured = true;
-						array3D[curCount][currentY][currentZ].textureRef = 3;
+						b->textured = true;
+						b->textureRef = 3;
 						break;
 					case STONE:
-						array3D[curCount][currentY][currentZ].textured = true;
-						array3D[curCount][currentY][currentZ].textureRef = 4;
+						b->textured = true;
+						b->textureRef = 4;
 						break;
 					case DIRT:
-						array3D[curCount][currentY][currentZ].textured = true;
-						array3D[curCount][currentY][currentZ].textureRef = 2;
+						b->textured = true;
+						b->textureRef = 2;
 						break;
 					case LOGS:
-						array3D[curCount][currentY][currentZ].textured = true;
-						array3D[curCount][currentY][currentZ].textureRef = 7;
+						b->textured = true;
+						b->textureRef = 7;
 						break;
 					case LEAVES:
-						array3D[curCount][currentY][currentZ].textured = true;
-						array3D[curCount][currentY][currentZ].textureRef = 8;
+						b->textured = true;
+						b->textureRef = 8;
 						break;
 					case TREE:
-						array3D[curCount][currentY][currentZ].textured = true;
-						array3D[curCount][currentY][currentZ].textureRef = 7;
+						b->textured = true;
+						b->textureRef = 7;
 						break;
 				}
 				curCount++;
@@ -636,6 +663,9 @@ void testApp::processShit(const string& s){
 
 //void testApp::resizeArray(int wx, int wy, int wz){
 
+/*
+ *		update visibility of faces and their normals
+ */
 void testApp::updateVisibility(){
 
 	for(int x=0; x < mapWidth; x++){
@@ -654,33 +684,57 @@ void testApp::updateVisibility(){
 						
 						
 						if(array3D[x - 1][y][z].type == blockTypes[i]){
-							vmask |= VIS_LEFT;							
+							vmask |= VIS_LEFT;	
+							calculateNormal(block, 3);
 						} 
 						if(array3D[x + 1][y][z].type  == blockTypes[i]){
 							vmask |= VIS_RIGHT;				
-							
+							calculateNormal(block, 2);							
+
 						} 
 						if(array3D[x][y - 1][z].type == blockTypes[i] ){
-							vmask |= VIS_BOTTOM;				
+							vmask |= VIS_BOTTOM;
+							calculateNormal(block, 4);							
+
 						} 
 						if (array3D[x][y + 1][z].type == blockTypes[i]){
-							vmask |= VIS_TOP;				
+							vmask |= VIS_TOP;		
+							calculateNormal(block, 0);	
+
 							
 						} 
 						if(array3D[x][y][z - 1].type == blockTypes[i] ){
-							vmask |= VIS_BACK;				
+							vmask |= VIS_BACK;
+							calculateNormal(block, 5);							
+
 						}
 						if (array3D[x][y][z + 1].type == blockTypes[i]){
-							vmask |= VIS_FRONT;				
+							vmask |= VIS_FRONT;
+							calculateNormal(block, 1);							
+
 						}
 					}
 					block->visMask = vmask;
+					//set the normal for this face
 					
 				}
 			}
 		}																	  
 	}
 }
+
+void testApp::calculateNormal(Block* b, int faceId){
+	
+	ofxVec3f points[6] = b->vertices;
+	
+	ofxVec3f V = points[b->faceList[faceId][3]] - points[b->faceList[faceId][1]];
+  	ofxVec3f U = points[b->faceList[faceId][2]] - points[b->faceList[faceId][1]];
+	b->normals[faceId].x = (U.y * V.z) - (U.z * V.y);
+	b->normals[faceId].y = (U.y * V.x) - (U.x * V.z);
+	b->normals[faceId].z = (U.x * V.y) - (U.y * V.x);
+	
+}
+
 
 //FBO config
 

@@ -121,7 +121,7 @@ void testApp::setup(){
 	}
 	Block b;
 	
-	ofxVec3f vList[6];
+	
 	vList[0] = ofxVec3f(0.0f, 0.0f, -1.0f);
 	vList[1] = ofxVec3f(-1.0f, 0.0f, -1.0f);
 	vList[2] = ofxVec3f(-1.0f, 0.0f, 0.0f);
@@ -131,6 +131,16 @@ void testApp::setup(){
 	vList[6] = ofxVec3f(0.0f, -1.0f, -1.0f);
 	vList[7] = ofxVec3f(-1.0f, -1.0f, -1.0f);
 	
+	const static int faceVals[6][4] = {
+		{3, 0, 1, 2}, //top
+		{3, 2, 4, 5}, //front
+		{3, 5, 6, 0},//right
+		{2, 1, 7, 4},//left
+		{5, 6, 7, 5},//bottom
+		{0, 1, 7, 6} //back
+	};
+		
+	
 	for(int x=0; x < mapWidth; x++){
 		for(int y=0; y < mapHeight; y++){
 			for(int z=0; z < mapDepth; z++){
@@ -138,6 +148,12 @@ void testApp::setup(){
 				b.textured = false;
 				b.visMask = VIS_TOP;
 				
+				
+				for(int a = 0; a < 6; a++){
+					for (int c = 0; c < 4; c++){
+						b.faceList[a][c] = faceVals[a][c];
+					}
+				}
 				
 				
 				array3D[x][y][z] = b;		
@@ -285,11 +301,14 @@ void testApp::drawBlock(int x, int y, int z, int wx, int wy, int wz, Block *bTyp
 	glBegin(GL_QUADS);
 	if(bType->visMask & VIS_TOP){
 		/*      This is the top face*/
-		
-		glTexCoord2f(0.0,0.0); 	glVertex3f(0.0f, 0.0f, 0.0f);
-		glTexCoord2f(0.0,1.0);	glVertex3f(0.0f, 0.0f, -1.0f);
-		glTexCoord2f(1.0,1.0);	glVertex3f(-1.0f, 0.0f, -1.0f);
-		glTexCoord2f(1.0,0.0);	glVertex3f(-1.0f, 0.0f, 0.0f);
+		ofxVec3f verts[4];
+		for (int i = 0; i < 4; i++){
+			verts[i] = vList[ bType->faceList[0][i] ];
+		}
+		glTexCoord2f(0.0,0.0); 	glVertex3f(verts[0].x, verts[0].y, verts[0].z);
+		glTexCoord2f(0.0,1.0);	glVertex3f(verts[1].x, verts[1].y, verts[1].z);
+		glTexCoord2f(1.0,1.0);	glVertex3f(verts[2].x, verts[2].y, verts[2].z);
+		glTexCoord2f(1.0,0.0);	glVertex3f(verts[3].x, verts[3].y, verts[3].z);
 	}
 	
 	if(bType->visMask & VIS_FRONT){		
@@ -725,10 +744,9 @@ void testApp::updateVisibility(){
 
 void testApp::calculateNormal(Block* b, int faceId){
 	
-	ofxVec3f points[6] = b->vertices;
 	
-	ofxVec3f V = points[b->faceList[faceId][3]] - points[b->faceList[faceId][1]];
-  	ofxVec3f U = points[b->faceList[faceId][2]] - points[b->faceList[faceId][1]];
+	ofxVec3f V = vList[b->faceList[faceId][3]] - vList[b->faceList[faceId][1]];
+  	ofxVec3f U = vList[b->faceList[faceId][2]] - vList[b->faceList[faceId][1]];
 	b->normals[faceId].x = (U.y * V.z) - (U.z * V.y);
 	b->normals[faceId].y = (U.y * V.x) - (U.x * V.z);
 	b->normals[faceId].z = (U.x * V.y) - (U.y * V.x);

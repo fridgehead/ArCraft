@@ -25,7 +25,7 @@ struct Block {
 	int textureRef;
 	bool textured;
 	int visMask;
-	ofxVec3f vertices[8];	//vertex data for the cube
+	//ofxVec3f vertices[8];	//vertex data for the cube
 	int faceList[6][4];		//list of faces and their vertices
 	ofxVec3f normals[6];	//normal vectors for faces
 };
@@ -162,6 +162,8 @@ public:
 	
 	//lighting
 	light light0;
+	
+	ofxVec3f vList[6];
 	
 };
 

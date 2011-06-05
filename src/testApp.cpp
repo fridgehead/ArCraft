@@ -119,8 +119,9 @@ void testApp::setup(){
 		for (int j = 0; j < mapHeight; ++j)
 			array3D[i][j].resize(mapDepth);
 	}
-	Block b;
 	
+	//create block face data and clear map 
+	Block b;	
 	
 	vList[0] = ofxVec3f(0.0f, 0.0f, -1.0f);
 	vList[1] = ofxVec3f(-1.0f, 0.0f, -1.0f);
@@ -131,11 +132,12 @@ void testApp::setup(){
 	vList[6] = ofxVec3f(0.0f, -1.0f, -1.0f);
 	vList[7] = ofxVec3f(-1.0f, -1.0f, -1.0f);
 	
+	//vertex indices for faces
 	const static int faceVals[6][4] = {
-		{3, 0, 1, 2}, //top
-		{3, 2, 4, 5}, //front
-		{3, 5, 6, 0},//right
-		{2, 1, 7, 4},//left
+		{2, 1, 0, 3}, //top
+		{5, 4, 2, 3}, //front
+		{0, 6, 5, 3},//right
+		{4, 7, 1, 2},//left
 		{5, 6, 7, 5},//bottom
 		{0, 1, 7, 6} //back
 	};
@@ -162,43 +164,42 @@ void testApp::setup(){
 		}
 	}
 	
+	//add some test blocks to play with when offline
+	b.type = GRASS;
+	b.textured = true;
+	b.textureRef = 0;
+	b.visMask = VIS_TOP;
+	array3D[1][1][5] = b;	
+	array3D[2][1][5] = b;
+	array3D[3][1][5] = b;
+	array3D[4][1][5] = b;
+	array3D[5][1][5] = b;
+	array3D[6][1][5] = b;
 
-		b.type = GRASS;
-		b.textured = true;
-		b.textureRef = 0;
-		b.visMask = VIS_TOP;
-		array3D[1][5][5] = b;
-	
-	
-	array3D[2][5][5] = b;
-	array3D[3][5][5] = b;
-	array3D[4][6][5] = b;
-	array3D[5][5][5] = b;
-	array3D[6][5][5] = b;
+	//run the face visibility and normal calculations
 	updateVisibility();
 	
-	
-	rotXAmt = 0;
-	rotYAmt = 0;
-	
-	//fbo.allocate(640,480, GL_RGBA, 1);
-	
-	
+	//dont draw the gui
 	guiDraw = false;
+	
+	//scale and offset for map
 	mapScale = 1.0f;
 	offset.x = -100.0f;
 	offset.y = 100.0f;
 	
 	scVal = 1.0f;
 	
+	//used as light colour (when lights eventually work)
 	sceneWhiteLevel = ofColor(255,255,255);
+	
+	//start up syphon and set framerate
 	mainOutputSyphonServer.setName("Minecraft");
-	
-	
 	ofSetFrameRate(60);
 	
+	//try and set up some lights
+	
 	light light = {
-		{0,0,0,1},  //position (the final 1 means the light is positional)
+		{0,50,0,1},  //position (the final 1 means the light is positional)
 		{1,1,1,1},    //diffuse
 		{0,0,0,1},    //specular
 		{0,0,0,1}     //ambient
@@ -208,19 +209,15 @@ void testApp::setup(){
 	
 	glEnable(GL_LIGHTING);
 	glEnable(GL_LIGHT0);
-	glLightModeli(GL_LIGHT_MODEL_TWO_SIDE,0);  //sets lighting to one-sided
+	//glLightModeli(GL_LIGHT_MODEL_TWO_SIDE,0);  //sets lighting to one-sided
 	glLightfv(GL_LIGHT0, GL_POSITION, light0.pos);
+	doLights();
 	
+	
+	//turn on backface culling
 	glEnable(GL_CULL_FACE);
 	
 }
-
-
-//--------------------------------------------------------------
-// starting:<-150><64><-124><2><2><2>
-/* slice:<y:0><z:0><0:1><0:1>
- *
- */
 
 void testApp::stop(){
 	netThread->stop();
@@ -287,7 +284,7 @@ void testApp::update(){
 }
 
 void testApp::drawBlock(int x, int y, int z, int wx, int wy, int wz, Block *bType){
-	//fbo.begin();
+	
 	glPushMatrix();
 	glTranslatef(x,y,z);
 	glScalef(wx,wy,wz);
@@ -297,16 +294,15 @@ void testApp::drawBlock(int x, int y, int z, int wx, int wy, int wz, Block *bTyp
 	glMaterialfv(GL_FRONT, GL_SHININESS, mcolor);
 	glFrontFace(GL_CW);
 	
+	//should only bind if the last texture was different to this one
 	if(bType->textured){
 		textures[bType->textureRef].bind();
 	}
 
-	glBegin(GL_QUADS);
-	
+	glBegin(GL_QUADS);	
 	for (int f = 0; f < 6; f++){
 		int visFace = 1 << f;
 		if(bType->visMask & visFace){
-			/*      This is the top face*/
 			ofxVec3f verts[4];
 			for (int i = 0; i < 4; i++){
 				verts[i] = vList[ bType->faceList[f][i] ];
@@ -323,9 +319,7 @@ void testApp::drawBlock(int x, int y, int z, int wx, int wy, int wz, Block *bTyp
 	if(bType->textured){
 		textures[bType->textureRef].unbind();
 	}
-	//grassImage.getTextureReference().unbind();
-	
-	
+
 	glPopMatrix();
 	
 	
@@ -459,6 +453,8 @@ void testApp::draw(){
 }
 
 void testApp::doLights(){	
+	glEnable(GL_LIGHTING);
+	glEnable(GL_LIGHT0);
 	glLightfv(GL_LIGHT0, GL_DIFFUSE, light0.diffuse);
 	glLightfv(GL_LIGHT0, GL_AMBIENT, light0.ambient);
     glLightfv(GL_LIGHT0, GL_SPECULAR, light0.specular);
@@ -520,8 +516,7 @@ void testApp::mousePressed(int x, int y, int button){
 
 //--------------------------------------------------------------
 void testApp::mouseReleased(int x, int y, int button){
-	rotYAmt = 0;
-	rotXAmt = 0;
+	
 }
 
 //--------------------------------------------------------------

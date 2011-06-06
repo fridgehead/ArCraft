@@ -9,7 +9,9 @@
 #include "ofxOpenNI.h"
 #include "ofxVectorMath.h"
 #include "NetworkThread.h"
-#include "ofxSyphon.h"
+//#include "ofxSyphon.h"
+
+//#define KINECT
 
 class NetworkThread;
 
@@ -101,7 +103,7 @@ public:
 	NetworkThread* netThread;
 	
 	//syphon test
-	ofxSyphonServer mainOutputSyphonServer;
+	//ofxSyphonServer mainOutputSyphonServer;
 	ofTextureData thisWillNeverWork;
 	
 	

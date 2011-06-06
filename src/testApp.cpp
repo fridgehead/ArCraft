@@ -33,8 +33,18 @@ void testApp::setup(){
 	cout << "Using kinect" << endl;
 
 #else
-	grabber.initGrabber(640, 480);
-	cout << "Using grabber" << endl;
+	ofSetLogLevel(OF_LOG_VERBOSE);
+	grabber.listDevices();
+	grabber.setDeviceID(7);
+	if(grabber.initGrabber(640, 480)){
+		
+	
+		cout << "Using grabber" << endl;
+		
+	} else {
+		cout << "MASSIVE FAIL" <<endl;
+		
+	}
 	
 #endif
 	
@@ -105,9 +115,9 @@ void testApp::setup(){
 	textures[8].loadImage("leaves.png");
 	
 	
-	mapWidth = 40;
+	mapWidth = 20;
 	mapHeight = 20;
-	mapDepth = 40;
+	mapDepth = 20;
 	mapLocked = false;
 	
 	//fill our 3d vector with 20x20x20
@@ -193,7 +203,7 @@ void testApp::setup(){
 	sceneWhiteLevel = ofColor(255,255,255);
 	
 	//start up syphon and set framerate
-	mainOutputSyphonServer.setName("Minecraft");
+//	mainOutputSyphonServer.setName("Minecraft");
 	ofSetFrameRate(60);
 	
 	//try and set up some lights
@@ -259,7 +269,9 @@ void testApp::update(){
 	kinectDepthImage.setFromPixels(pixelBuf, 640, 480);
 #else
 	grabber.grabFrame();
-	kinectImage.setFromPixels(grabber.getPixels(), 640, 480);
+	if(grabber.isFrameNew()){
+		kinectImage.setFromPixels(grabber.getPixels(), 640, 480);
+	}
 	
 #endif
 	
@@ -447,7 +459,7 @@ void testApp::draw(){
 	finalMaskImage.setFromPixels(finalBuf, 640, 480);
 
 #endif
-	mainOutputSyphonServer.publishFail(&thisWillNeverWork);
+	//mainOutputSyphonServer.publishFail(&thisWillNeverWork);
 	
 	
 }
@@ -744,7 +756,7 @@ void testApp::drawFbo(){
 		
 	//bind texture
 	glBindTexture(GL_TEXTURE_2D, mTextureID);
-	glGenerateMipmapEXT(GL_TEXTURE_2D);
+	//glGenerateMipmapEXT(GL_TEXTURE_2D);
 	
 	//ofSetColor(255, 255, 255, 0);	
 	//draw quad

@@ -9,7 +9,7 @@
 #include "ofxOpenNI.h"
 #include "ofxVectorMath.h"
 #include "NetworkThread.h"
-//#include "ofxSyphon.h"
+#include "ofxSyphon.h"
 
 //#define KINECT
 
@@ -20,7 +20,7 @@ class NetworkThread;
 enum BlockType  {	GRASS = 2, COBBLE = 4, LAVA = 10,
 	LAVA2 = 11, STONE = 1, DIRT = 3,
 	LOGS = 5, WATER = 8, LEAVES = 18,
-	SNOW = 78, NONE = 0, TREE = 17 };
+	SNOW = 78, NONE = 0, TREE = 17, SAND = 7 };
 
 struct Block {
 	BlockType type;
@@ -75,6 +75,7 @@ public:
 	void trim(string& str);
 	void processShit(const string& str);
 	void updateVisibility();
+	void setBlock(int x, int y, int z, int type);
 	
 	void doLights();
 	
@@ -103,8 +104,10 @@ public:
 	NetworkThread* netThread;
 	
 	//syphon test
-	//ofxSyphonServer mainOutputSyphonServer;
+#ifdef SYPHON
+	ofxSyphonServer mainOutputSyphonServer;
 	ofTextureData thisWillNeverWork;
+#endif
 	
 	
 	//map data

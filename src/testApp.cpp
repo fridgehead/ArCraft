@@ -33,9 +33,9 @@ void testApp::setup(){
 	cout << "Using kinect" << endl;
 
 #else
-	ofSetLogLevel(OF_LOG_VERBOSE);
-	grabber.listDevices();
-	grabber.setDeviceID(7);
+	//ofSetLogLevel(OF_LOG_VERBOSE);
+	//grabber.listDevices();
+	//grabber.setDeviceID(7);
 	if(grabber.initGrabber(640, 480)){
 		
 	
@@ -202,8 +202,11 @@ void testApp::setup(){
 	//used as light colour (when lights eventually work)
 	sceneWhiteLevel = ofColor(255,255,255);
 	
+	#ifdef SYPHON
 	//start up syphon and set framerate
-//	mainOutputSyphonServer.setName("Minecraft");
+	mainOutputSyphonServer.setName("Minecraft");
+	#endif
+	
 	ofSetFrameRate(60);
 	
 	//try and set up some lights
@@ -459,8 +462,10 @@ void testApp::draw(){
 	finalMaskImage.setFromPixels(finalBuf, 640, 480);
 
 #endif
-	//mainOutputSyphonServer.publishFail(&thisWillNeverWork);
 	
+#ifdef SYPHON
+	mainOutputSyphonServer.publishFail(&thisWillNeverWork);
+#endif
 	
 }
 
@@ -471,19 +476,23 @@ void testApp::doLights(){
 	glLightfv(GL_LIGHT0, GL_AMBIENT, light0.ambient);
     glLightfv(GL_LIGHT0, GL_SPECULAR, light0.specular);
 	glLightfv(GL_LIGHT0, GL_POSITION, light0.pos);
+	glLightf(GL_LIGHT0, GL_CONSTANT_ATTENUATION, scVal);
+	//glLightf(GL_LIGHT0, GL_LINEAR_ATTENUATION, 0.2f);
+	glLightf(GL_LIGHT0, GL_QUADRATIC_ATTENUATION, 0.0f);
+	
 }
 
 
 //--------------------------------------------------------------
 void testApp::keyPressed(int key){
 	if(key == 'w'){
-		scVal += 5;
+		scVal += 0.01;
 	} else if(key == 's'){
-		scVal -= 5;
+		scVal -= 0.01;
 	} else if (key == 'g'){
 		guiDraw = !guiDraw;
 	}
-	
+	cout << ofToString(scVal) << endl;	
 }
 
 //--------------------------------------------------------------
@@ -571,11 +580,9 @@ void testApp::processShit(const string& s){
 			
 			if(ct == 1){
 				currentY = atoi(results);
-				cout << "cy: " << currentY << endl;
 				ct++;
 			} else if (ct == 2){
 				currentZ = atoi(results);
-				cout << "cz: " << currentZ << endl;
 
 				//clear that row
 				for(int x = 0; x < 20; x++){
@@ -586,52 +593,7 @@ void testApp::processShit(const string& s){
 				ct++;
 			} else {
 				int type = atoi(results);
-				//cout << "type: " << type << "," << endl;
-				//	cout << "added block id: " << type << " at x: " << curCount << " " << currentY << " " << currentZ << endl;
-				Block* b = &array3D[curCount][currentY][currentZ];
-				b->type = (BlockType)type;
-				b->textured = false;
-				//b->type = (BlockType)type;
-				//b->textured = false;						
-				
-				switch ((BlockType)type ){
-					case GRASS:
-						b->textured = true;						
-						b->textureRef = 0;
-						break;
-					case COBBLE:
-						b->textured = true;
-						b->textureRef = 1;
-						break;
-					case LAVA:
-						b->textured = true;
-						b->textureRef = 3;
-						break;
-					case LAVA2:
-						b->textured = true;
-						b->textureRef = 3;
-						break;
-					case STONE:
-						b->textured = true;
-						b->textureRef = 4;
-						break;
-					case DIRT:
-						b->textured = true;
-						b->textureRef = 2;
-						break;
-					case LOGS:
-						b->textured = true;
-						b->textureRef = 7;
-						break;
-					case LEAVES:
-						b->textured = true;
-						b->textureRef = 8;
-						break;
-					case TREE:
-						b->textured = true;
-						b->textureRef = 7;
-						break;
-				}
+				setBlock(curCount,currentY,currentZ, type);
 				curCount++;
 				ct++;
 			}
@@ -653,9 +615,127 @@ void testApp::processShit(const string& s){
 		updateVisibility();
 
 		
+	} else if(results[0]  == 'a'){
+		int ct = 0;
+		int currentX = -1;
+		int currentY = -1;
+		int currentZ = -1;
+		int type = 0;
+		while (results != NULL){
+			
+			if(ct == 1){
+				type = atoi(results);
+				cout << "add block id: " << type << endl;
+				ct++;
+			} else if (ct == 2){
+				currentX = atoi(results);
+				
+				ct++;
+			} else if (ct == 3){
+				currentY = atoi(results);
+				
+				ct++;
+			}else if (ct == 4){
+				currentZ = atoi(results);
+					
+				ct++;
+			} else {
+				ct++;
+			}
+			results = strtok(NULL, ",");
+		}
+		if(currentX >= 0 && currentX < mapWidth && currentY >= 0 && currentY < mapHeight && currentZ >= 0 && currentZ < mapDepth){
+			setBlock(currentX, currentY, currentZ, type);
+			cout << "added" << endl;
+		}
+		updateVisibility();
+
+	} else if(results[0]  == 'd'){
+		int ct = 0;
+		int currentX = -1;
+		int currentY = -1;
+		int currentZ = -1;
+		int type = 0;
+		while (results != NULL){
+			
+			if (ct == 1){
+				currentX = atoi(results);
+				
+				ct++;
+			} else if (ct == 2){
+				currentY = atoi(results);
+				
+				ct++;
+			}else if (ct == 3){
+				currentZ = atoi(results);
+				
+				ct++;
+			} else {
+				ct++;
+			}
+			results = strtok(NULL, ",");
+		}
+		if(currentX >= 0 && currentX < mapWidth && currentY >= 0 && currentY < mapHeight && currentZ >= 0 && currentZ < mapDepth){
+			setBlock(currentX, currentY, currentZ, 0);
+			cout << "delete" << endl;
+		}
+		updateVisibility();
 	}
 //	delete cstr;
 //	delete results;
+}
+
+void testApp::setBlock(int x, int y, int z, int type){
+	//cout << "type: " << type << "," << endl;
+	//	cout << "added block id: " << type << " at x: " << curCount << " " << currentY << " " << currentZ << endl;
+	Block* b = &array3D[x][y][z];
+	b->type = (BlockType)type;
+	b->textured = false;
+	//b->type = (BlockType)type;
+	//b->textured = false;						
+	
+	switch ((BlockType)type ){
+		case GRASS:
+			b->textured = true;						
+			b->textureRef = 0;
+			break;
+		case COBBLE:
+			b->textured = true;
+			b->textureRef = 1;
+			break;
+		case LAVA:
+			b->textured = true;
+			b->textureRef = 3;
+			break;
+		case LAVA2:
+			b->textured = true;
+			b->textureRef = 3;
+			break;
+		case STONE:
+			b->textured = true;
+			b->textureRef = 4;
+			break;
+		case DIRT:
+			b->textured = true;
+			b->textureRef = 2;
+			break;
+		case LOGS:
+			b->textured = true;
+			b->textureRef = 7;
+			break;
+		case LEAVES:
+			b->textured = true;
+			b->textureRef = 8;
+			break;
+		case TREE:
+			b->textured = true;
+			b->textureRef = 7;
+			break;
+		case SAND:
+			b->textured = true;
+			b->textureRef = 5;
+			break;
+	}
 }
 
 //void testApp::resizeArray(int wx, int wy, int wz){
@@ -672,6 +752,9 @@ void testApp::updateVisibility(){
 				int vmask = 0;
 				if(x <= 0 || x >= mapWidth - 1 ||  y >= mapHeight - 1 || z <= 0 || z >= mapDepth - 1){
 					block->visMask = 63;
+					for(int i = 0; i < 6; i++){
+						calculateNormal(block, i);
+					}
 				} else if(y <= 0){
 					block->visMask = 0;
 				} else {
@@ -831,12 +914,14 @@ void testApp::initFrameBuffer() {
 	
 	glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0); // Unbind our frame buffer  
 	
+#ifdef SYPHON
 	thisWillNeverWork.bAllocated = true;
 	thisWillNeverWork.textureID = mTextureID;
 	thisWillNeverWork.width = 640;
 	thisWillNeverWork.height = 480;
 	thisWillNeverWork.bFlipTexture = true;
 	thisWillNeverWork.textureTarget = GL_TEXTURE_2D;
+#endif
 	
 }  
 

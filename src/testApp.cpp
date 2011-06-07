@@ -414,6 +414,10 @@ void testApp::draw(){
 		glPopMatrix();
 		//unbindFbo();
 		
+		
+		//draw the player
+		
+		
 	}
 	unbindFbo();
 	glPopMatrix();
@@ -680,7 +684,48 @@ void testApp::processShit(const string& s){
 			cout << "delete" << endl;
 		}
 		updateVisibility();
-	}
+	} else if(results[0]  == 'p'){
+			int ct = 0;
+			float currentX = -1;
+			float currentY = -1;
+			float currentZ = -1;
+			int playerId = 0;
+			while (results != NULL){
+				
+				if (ct == 1){
+					//player id
+					
+					playerId = atoi(results);
+					//cout << "player id: " << playerId << endl;
+					
+					ct++;
+				} else if (ct == 2){
+					//x
+					p.xPos = strtod(results,NULL);
+					//cout << currentX << endl;
+
+					
+					ct++;
+				}else if (ct == 3){
+					//y
+					p.yPos = strtod(results,NULL);
+					ct++;
+				} else if (ct == 4){
+					//z
+					
+					p.zPos = strtod(results,NULL);
+					ct++;
+				} else {
+					
+					ct++;
+				}
+				results = strtok(NULL, ",");
+				
+			}
+			//cout << "pos" << endl;
+		p.lastUpdateTime = ofGetElapsedTimeMillis();
+		
+		}
 //	delete cstr;
 //	delete results;
 }

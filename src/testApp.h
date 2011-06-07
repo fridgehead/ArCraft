@@ -49,9 +49,10 @@ struct light
 
 struct Player {
 	int entityId;
-	int xPos;
-	int yPos;
-	int zPos;
+	float xPos;
+	float yPos;
+	float zPos;
+	int lastUpdateTime;
 };
 
 
@@ -169,6 +170,9 @@ public:
 	light light0;
 	
 	ofxVec3f vList[6];
+	
+	
+	Player p;
 	
 };
 

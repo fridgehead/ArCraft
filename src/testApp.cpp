@@ -69,11 +69,11 @@ void testApp::setup(){
 	bDraw = false;
 	
 	//tracker = new ARToolKitPlus::TrackerSingleMarkerImpl<6,6,6, 1, 8>(width,height);
-	tracker = new ARToolKitPlus::TrackerMultiMarkerImpl<6,6,6, 1, 8>(width,height);
+	tracker = new ARToolKitPlus::TrackerMultiMarkerImpl<6,6,6, 1, 64>(width,height);
 	
 	tracker->setPixelFormat(ARToolKitPlus::PIXEL_FORMAT_LUM);	
 	//markerboard_480-499.cfg
-    if( !tracker->init( (const char *)ofToDataPath("LogitechPro4000.dat").c_str(), (const char *)ofToDataPath("small.cfg").c_str(), 1.0f, 1000.0f) )            // load std. ARToolKit camera file
+    if( !tracker->init( (const char *)ofToDataPath("bluedot.cfg").c_str(), (const char *)ofToDataPath("conf.cfg").c_str(), 1.0f, 1000.0f) )            // load std. ARToolKit camera file
 	{
 		printf("ERROR: init() failed\n");
 		delete tracker;
@@ -82,7 +82,8 @@ void testApp::setup(){
 	// the marker in the BCH test image has a thin border...
     tracker->setBorderWidth(0.125f);	
     // set a threshold. alternatively we could also activate automatic thresholding
-    tracker->setThreshold(150);	
+    //tracker->setThreshold(150);	
+	tracker->activateAutoThreshold(true);
     // let's use lookup-table undistortion for high-speed
     // note: LUT only works with images up to 1024x1024
     tracker->setUndistortionMode(ARToolKitPlus::UNDIST_LUT);
@@ -90,14 +91,13 @@ void testApp::setup(){
     // RPP is more robust than ARToolKit's standard pose estimator
     tracker->setPoseEstimator(ARToolKitPlus::POSE_ESTIMATOR_RPP);
 	
+	tracker->setImageProcessingMode(ARToolKitPlus::IMAGE_FULL_RES);
+	
     // switch to simple ID based markers
     // use the tool in tools/IdPatGen to generate markers
     tracker->setMarkerMode(ARToolKitPlus::MARKER_ID_SIMPLE);
-	/*
-	udpConnectionRx.Create();
-	udpConnectionRx.Bind(19802); //incomming data on my port # ...
-	udpConnectionRx.SetNonBlocking(true);
-	*/
+	
+	
 	netThread = new NetworkThread(this);
 	netThread->start();
 	
@@ -178,7 +178,7 @@ void testApp::setup(){
 	b.type = GRASS;
 	b.textured = true;
 	b.textureRef = 0;
-	b.visMask = VIS_TOP;
+	b.visMask = 63;
 	array3D[1][1][5] = b;	
 	array3D[2][1][5] = b;
 	array3D[3][1][5] = b;
@@ -186,6 +186,8 @@ void testApp::setup(){
 	array3D[5][1][5] = b;
 	array3D[6][1][5] = b;
 
+	//testBlock = b;
+	
 	//run the face visibility and normal calculations
 	updateVisibility();
 	
@@ -291,7 +293,10 @@ void testApp::update(){
 	//cout << conf << endl;
 	if( conf > 0 ){
 		bDraw = true;
-	}else bDraw = false;
+		lastDetectTime = ofGetElapsedTimeMillis();
+	}else {
+		bDraw = false;
+	}
 		
 		
 	
@@ -350,12 +355,14 @@ void testApp::draw(){
 	glEnable(GL_TEXTURE_2D);
 	glPushMatrix();
 	bindFbo();
-	glDisable(GL_DEPTH_TEST);
+	//glDisable(GL_DEPTH_TEST);
 	
-	kinectImage.draw(0, 0);
-	glEnable (GL_DEPTH_TEST);
+	//kinectImage.draw(0, 0);
+	//glEnable (GL_DEPTH_TEST);
 	
-	if(bDraw){
+	//if(bDraw){
+		
+		
 		//bindFbo();
 		glMatrixMode( GL_PROJECTION );
 		glPushMatrix();
@@ -363,7 +370,7 @@ void testApp::draw(){
 		glMatrixMode( GL_MODELVIEW );		
 		glPushMatrix();
 		glLoadMatrixf(tracker->getModelViewMatrix());
-				
+						
 
 		
 		doLights();		
@@ -418,21 +425,24 @@ void testApp::draw(){
 		//draw the player
 		
 		
-	}
+	//}
 	unbindFbo();
 	glPopMatrix();
 	
     glDisable(GL_LIGHTING);
 	glDisable (GL_DEPTH_TEST);
 	ofEnableAlphaBlending();
-	//kinectImage.draw(0, 0);	
+	kinectImage.draw(0, 0);	
 	
-	//if(bDraw){
+	if(!bDraw){
 		//ofSetColor(sceneWhiteLevel);
-		drawFbo();
+		int v = ofMap(ofGetElapsedTimeMillis() - lastDetectTime, 0, 100, 0, 255, true);
+		ofSetColor(255, 255, 255, 255 - (int)v);
+	}
+	drawFbo();
 		//ofSetColor(255,255,255);
 				
-	//}	
+		
 	if(guiDraw){
 		
 		kinectDepthImage.draw(0,0,160,120);	
@@ -480,7 +490,7 @@ void testApp::doLights(){
 	glLightfv(GL_LIGHT0, GL_AMBIENT, light0.ambient);
     glLightfv(GL_LIGHT0, GL_SPECULAR, light0.specular);
 	glLightfv(GL_LIGHT0, GL_POSITION, light0.pos);
-	glLightf(GL_LIGHT0, GL_CONSTANT_ATTENUATION, scVal);
+	glLightf(GL_LIGHT0, GL_CONSTANT_ATTENUATION, 0.07f);
 	//glLightf(GL_LIGHT0, GL_LINEAR_ATTENUATION, 0.2f);
 	glLightf(GL_LIGHT0, GL_QUADRATIC_ATTENUATION, 0.0f);
 	
@@ -496,7 +506,8 @@ void testApp::keyPressed(int key){
 	} else if (key == 'g'){
 		guiDraw = !guiDraw;
 	}
-	cout << ofToString(scVal) << endl;	
+	cout << ofToString(scVal) << endl;
+	mapScale = scVal;
 }
 
 //--------------------------------------------------------------

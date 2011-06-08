@@ -174,6 +174,9 @@ public:
 	
 	Player p;
 	
+	Block testblock;
+	int lastDetectTime;
+	
 };
 
 

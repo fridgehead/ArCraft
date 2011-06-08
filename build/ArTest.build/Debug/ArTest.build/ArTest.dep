@@ -1,11 +1,10 @@
-ffffffffffffffffffffffffffffffff 656b08bc110956d56c0a216c52f505be ffffffffffffffffffffffffffffffff 1380852 /Users/tomwyatt/dev/cpp/apps/ArTest/build/ArTest.build/Debug/ArTest.build/Objects-normal/i386/testApp.o
-ffffffffffffffffffffffffffffffff 432f58ab517c4a314c4478e5dee4b8ce ffffffffffffffffffffffffffffffff 102 /Users/tomwyatt/dev/cpp/apps/ArTest/bin/ArTest.app
-ffffffffffffffffffffffffffffffff 1952ed7be848de9a0b6f0199afb990af ffffffffffffffffffffffffffffffff 4255012 /Users/tomwyatt/dev/cpp/apps/ArTest/bin/ArTest.app/Contents/MacOS/ArTest
-ffffffffffffffffffffffffffffffff a0762094cb4fc0b7288a0bd6c00e101a ffffffffffffffffffffffffffffffff 526852 /Users/tomwyatt/dev/cpp/apps/ArTest/build/ArTest.build/Debug/ArTest.build/Objects-normal/i386/NetworkThread.o
-ffffffffffffffffffffffffffffffff 860e23dc8f023a3773bc16b337786645 ffffffffffffffffffffffffffffffff 585564 /Users/tomwyatt/dev/cpp/apps/ArTest/build/ArTest.build/Debug/ArTest.build/Objects-normal/i386/main.o
+d9be68bda1772bf212cf348c5ed4f552 432f58ab517c4a314c4478e5dee4b8ce ffffffffffffffffffffffffffffffff 102 /Users/tomwyatt/dev/cpp/apps/ArTest/bin/ArTest.app
+a606c502b15a339551e7883dd3a5b144 1952ed7be848de9a0b6f0199afb990af ffffffffffffffffffffffffffffffff 4259684 /Users/tomwyatt/dev/cpp/apps/ArTest/bin/ArTest.app/Contents/MacOS/ArTest
+c1dd3867fef65e108dc2bc727912fdc7 656b08bc110956d56c0a216c52f505be ffffffffffffffffffffffffffffffff 1382908 /Users/tomwyatt/dev/cpp/apps/ArTest/build/ArTest.build/Debug/ArTest.build/Objects-normal/i386/testApp.o
 c35d21ce5d3f55b2d63f9aeb21a5975e a184db23d4fe2a66017b48ef16d4a7ba ffffffffffffffffffffffffffffffff 378452 /Users/tomwyatt/dev/cpp/apps/ArTest/build/ArTest.build/Debug/ArTest.build/Objects-normal/i386/ofxSyphonServer.o
 c35d21ce1dd43260d63f9aeb21a5ab1b a57d5485c816eab8ad3e4c445745581e ffffffffffffffffffffffffffffffff 379328 /Users/tomwyatt/dev/cpp/apps/ArTest/build/ArTest.build/Debug/ArTest.build/Objects-normal/i386/ofxSyphonClient.o
 5d82f6d157282b4ca75979f2234a112f 12e99ee5a3bf6ac57b20c34446e27eed ffffffffffffffffffffffffffffffff 22916 /Users/tomwyatt/dev/cpp/apps/ArTest/build/ArTest.build/Debug/ArTest.build/Objects-normal/i386/SyphonNameboundClient.o
+c1dd3867b53735a08dc2bc727911ba58 a0762094cb4fc0b7288a0bd6c00e101a ffffffffffffffffffffffffffffffff 527036 /Users/tomwyatt/dev/cpp/apps/ArTest/build/ArTest.build/Debug/ArTest.build/Objects-normal/i386/NetworkThread.o
 c1dd3867ffd0186f8dc2bc727919e918 4252f2519f267bf8584d0839f2446af2 ffffffffffffffffffffffffffffffff 514064 /Users/tomwyatt/dev/cpp/apps/ArTest/build/ArTest.build/Debug/ArTest.build/Objects-normal/i386/ofxUserGenerator.o
 c1dd3867b2e8f73d8dc2bc72791bb054 33229f6ad99ac2d4cb2719c623f67728 ffffffffffffffffffffffffffffffff 457092 /Users/tomwyatt/dev/cpp/apps/ArTest/build/ArTest.build/Debug/ArTest.build/Objects-normal/i386/ofxTrackedUser.o
 c1dd3867b2c9a8cb8dc2bc72791345ce 0ceb6bf0fb28076cb6bcfb0d3b7dfe31 ffffffffffffffffffffffffffffffff 449808 /Users/tomwyatt/dev/cpp/apps/ArTest/build/ArTest.build/Debug/ArTest.build/Objects-normal/i386/ofxOpenNIRecorder.o
@@ -26,6 +25,7 @@ c1dd3867fe48af228dc2bc7279118c73 8d5bd01edafa2341b141454e63c8e505 ffffffffffffff
 c1dd3867b2f1ca618dc2bc72791bced5 3f94ce668c464e5e769f132e0bb82f72 ffffffffffffffffffffffffffffffff 163360 /Users/tomwyatt/dev/cpp/apps/ArTest/build/ArTest.build/Debug/ArTest.build/Objects-normal/i386/ofxTCPServer.o
 c1dd3867b43b796d8dc2bc727911cfc2 98176b0d70c9cc44788c32937e70cf07 ffffffffffffffffffffffffffffffff 398788 /Users/tomwyatt/dev/cpp/apps/ArTest/build/ArTest.build/Debug/ArTest.build/Objects-normal/i386/ofxTCPManager.o
 c1dd3867b293b4658dc2bc727919d251 0e301ad636c67142e9b6640191e556b1 ffffffffffffffffffffffffffffffff 365356 /Users/tomwyatt/dev/cpp/apps/ArTest/build/ArTest.build/Debug/ArTest.build/Objects-normal/i386/ofxTCPClient.o
+c1dd3867f434ef768dc2bc7279104959 860e23dc8f023a3773bc16b337786645 ffffffffffffffffffffffffffffffff 586376 /Users/tomwyatt/dev/cpp/apps/ArTest/build/ArTest.build/Debug/ArTest.build/Objects-normal/i386/main.o
 000000004d9b16fe000000000000026a efbcd4cbae3106a3a5173d1f3565fc93 ffffffffffffffffffffffffffffffff 618 /Users/tomwyatt/dev/cpp/apps/ArTest/bin/ArTest.app/Contents/Resources/openFrameworks-Info.plist
 000000004ce3bd8800000000000000cc 8956940f572c6b28ed50803717ad2a8c ffffffffffffffffffffffffffffffff 204 /Users/tomwyatt/dev/cpp/apps/ArTest/bin/ArTest.app/Contents/Frameworks/GLUT.framework
 000000004a7680be00000000000005fe c35d21ce5aec8610d63f9aeb21afe791 ffffffffffffffffffffffffffffffff 60689264 /var/folders/tR/tRQxoldQEVWQWjHsXTRCmE+++TI/-Caches-/com.apple.Xcode.501/SharedPrecompiledHeaders/Carbon-hbteolkrdcrfrkfoxutuujpazpfj/Carbon.h.gch

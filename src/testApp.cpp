@@ -69,7 +69,7 @@ void testApp::setup(){
 	bDraw = false;
 	
 	//tracker = new ARToolKitPlus::TrackerSingleMarkerImpl<6,6,6, 1, 8>(width,height);
-	tracker = new ARToolKitPlus::TrackerMultiMarkerImpl<6,6,6, 1, 64>(width,height);
+	tracker = new ARToolKitPlus::TrackerMultiMarkerImpl<6,6,6, 1, 128>(width,height);
 	
 	tracker->setPixelFormat(ARToolKitPlus::PIXEL_FORMAT_LUM);	
 	//markerboard_480-499.cfg

@@ -30,6 +30,18 @@ struct Block {
 	//ofxVec3f vertices[8];	//vertex data for the cube
 	int faceList[6][4];		//list of faces and their vertices
 	ofxVec3f normals[6];	//normal vectors for faces
+	ofxVec3f position;
+	bool transparent;
+	
+	bool operator ==(const Block& b){
+		return position == b.position;
+	}
+	
+	bool operator <(const Block& b) const{
+		return visMask < b.visMask;
+	}
+		
+	
 };
 
 struct light
@@ -77,6 +89,7 @@ public:
 	void processShit(const string& str);
 	void updateVisibility();
 	void setBlock(int x, int y, int z, int type);
+	void deleteBlock(int x, int y, int z);
 	
 	void doLights();
 	
@@ -90,6 +103,8 @@ public:
 	void drawFbo();
 	
 	void calculateNormal(Block* b, int faceId);
+	
+	bool testBlock(int x, int y, int z);
 	
 	GLuint mDepthID;
 	GLuint mFBOID;
@@ -112,10 +127,16 @@ public:
 	
 	
 	//map data
-	//Block blocks [30][30][30] ;
 	int mapWidth, mapHeight, mapDepth;
 	bool mapLocked;
-	vector<vector<vector<Block> > > array3D;
+	//vector<vector<vector<Block> > > array3D;
+	vector<Block> array3D;
+	ofxVec3f vList[6];
+	int startDrawPointer;
+	Block testblock;
+	//bae block to copy from for all new blocks
+	Block baseBlock;
+	
 	
 	
 	//camera stuff
@@ -169,12 +190,10 @@ public:
 	//lighting
 	light light0;
 	
-	ofxVec3f vList[6];
 	
 	
 	Player p;
 	
-	Block testblock;
 	int lastDetectTime;
 	
 };

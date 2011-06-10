@@ -189,6 +189,7 @@ public:
 	
 	//lighting
 	light light0;
+	light light1;
 	
 	
 	

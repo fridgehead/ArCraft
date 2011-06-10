@@ -214,6 +214,11 @@ void testApp::setup(){
     };
 	
 	light0 = light;
+	light1 = light;
+	light1.ambient[0] = 0.5f;
+	light1.ambient[1] = 0.5f;
+	light1.ambient[2] = 0.5f;
+	light1.ambient[3] = 1.0f;
 	
 	glEnable(GL_LIGHTING);
 	glEnable(GL_LIGHT0);
@@ -350,10 +355,10 @@ void testApp::draw(){
 	glEnable(GL_TEXTURE_2D);
 	glPushMatrix();
 	bindFbo();
-	//glDisable(GL_DEPTH_TEST);
+	glDisable(GL_DEPTH_TEST);
 	
-	//kinectImage.draw(0, 0);
-	//glEnable (GL_DEPTH_TEST);
+	kinectImage.draw(0, 0,800,600);
+	glEnable (GL_DEPTH_TEST);
 	
 	//if(bDraw){
 	
@@ -368,7 +373,7 @@ void testApp::draw(){
 	
 	
 	
-	doLights();		
+			
 	
 	glTranslatef(offset.x,offset.y,0);
 	glRotatef(90, 1, 0, 0);
@@ -396,6 +401,8 @@ void testApp::draw(){
 	glEnd();
 	glColor3f(1,1,1);
 	
+	doLights();
+	
 	lastTextureRef = array3D[startDrawPointer].textureRef;
 	textures[lastTextureRef].bind();
 	
@@ -421,17 +428,8 @@ void testApp::draw(){
 	
     glDisable(GL_LIGHTING);
 	glDisable (GL_DEPTH_TEST);
-	ofEnableAlphaBlending();
-	kinectImage.draw(0, 0);	
 	
-	if(!bDraw){
-		//ofSetColor(sceneWhiteLevel);
-		int v = ofMap(ofGetElapsedTimeMillis() - lastDetectTime, 0, 100, 0, 255, true);
-		ofSetColor(255, 255, 255, 255 - (int)v);
-	}
 	drawFbo();
-		//ofSetColor(255,255,255);
-				
 		
 	if(guiDraw){
 		
@@ -483,6 +481,9 @@ void testApp::doLights(){
 	glLightf(GL_LIGHT0, GL_CONSTANT_ATTENUATION, 0.07f);
 	//glLightf(GL_LIGHT0, GL_LINEAR_ATTENUATION, 0.2f);
 	glLightf(GL_LIGHT0, GL_QUADRATIC_ATTENUATION, 0.0f);
+	
+	glEnable(GL_LIGHT1);
+	glLightfv(GL_LIGHT1, GL_AMBIENT, light1.ambient);
 	
 }
 
@@ -932,11 +933,11 @@ void testApp::drawFbo(){
 	glTexCoord2f(0, 1);
 	glVertex3f(0, 0, 0);
 	glTexCoord2f(1, 1);
-	glVertex3f(640, 0, 1);
+	glVertex3f(800, 0, 1);
 	glTexCoord2f(1, 0);
-	glVertex3f(640, 480, 1);
+	glVertex3f(800, 600, 1);
 	glTexCoord2f(0, 0);
-	glVertex3f(0, 480, 1);
+	glVertex3f(0, 600, 1);
 	glEnd();
 	glBindTexture(GL_TEXTURE_2D, 0);
 	glPopMatrix();
